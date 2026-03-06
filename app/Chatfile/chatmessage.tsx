@@ -2,7 +2,8 @@ import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Stack, router } from 'expo-router';
 import React, { useState } from 'react';
-import { Dimensions, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -66,10 +67,10 @@ export default function ChatMessage() {
                     </TouchableOpacity>
 
                     <View style={styles.headerUserInfo}>
-                        <View style={styles.avatarContainer}>
+                        <TouchableOpacity style={styles.avatarContainer} onPress={() => router.push('/Chatfile/chatprofile')}>
                             <Image source={{ uri: CONTACT.avatar }} style={styles.avatar} contentFit="cover" />
                             {CONTACT.isOnline && <View style={styles.onlineDot} />}
-                        </View>
+                        </TouchableOpacity>
                         <View style={styles.headerTextContainer}>
                             <Text style={styles.headerName}>{CONTACT.name}</Text>
                             <Text style={styles.headerStatus}>{CONTACT.status}</Text>

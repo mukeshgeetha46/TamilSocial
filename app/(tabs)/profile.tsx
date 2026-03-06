@@ -51,7 +51,7 @@ export default function ProfileScreen() {
                 <Feather name="arrow-left" size={24} color="black" />
             </TouchableOpacity>
             <Text style={styles.headerUsername}>{PROFILE_DATA.username}</Text>
-            <TouchableOpacity style={styles.headerIcon}>
+            <TouchableOpacity style={styles.headerIcon} onPress={() => router.push('/setting/setting')}>
                 <Ionicons name="settings-sharp" size={24} color="black" />
             </TouchableOpacity>
         </View>
@@ -70,14 +70,14 @@ export default function ProfileScreen() {
                     <Text style={styles.statNumber}>{PROFILE_DATA.posts}</Text>
                     <Text style={styles.statLabel}>Posts</Text>
                 </View>
-                <View style={styles.statItem}>
+                <TouchableOpacity style={styles.statItem} onPress={() => router.push('/Follower/follower')}>
                     <Text style={styles.statNumber}>{PROFILE_DATA.followers}</Text>
                     <Text style={styles.statLabel}>Followers</Text>
-                </View>
-                <View style={styles.statItem}>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.statItem} onPress={() => router.push('/Follower/following')}>
                     <Text style={styles.statNumber}>{PROFILE_DATA.following}</Text>
                     <Text style={styles.statLabel}>Following</Text>
-                </View>
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -94,7 +94,7 @@ export default function ProfileScreen() {
 
     const renderActions = () => (
         <View style={styles.actionsContainer}>
-            <TouchableOpacity style={styles.editButton}>
+            <TouchableOpacity style={styles.editButton} onPress={() => router.push('/Follower/editprofile')}>
                 <Text style={styles.editButtonText}>Edit Profile</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.shareButton}>

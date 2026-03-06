@@ -57,7 +57,7 @@ const Header = () => (
   <View style={styles.header}>
     <Text style={styles.headerTitle}>InstaClone</Text>
     <View style={styles.headerIcons}>
-      <TouchableOpacity style={styles.iconButton}>
+      <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/Notification/notification')}>
         <Feather name="plus-square" size={24} color="black" />
       </TouchableOpacity>
       <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/Chatfile/chat')}>
@@ -155,12 +155,12 @@ const PostItem = ({ item }) => (
     <View style={styles.postActions}>
       <View style={styles.postActionsLeft}>
         <TouchableOpacity style={styles.actionIcon}>
-          <Ionicons name={item.isLiked ? "heart" : "heart-outline"} ize={26} color={item.isLiked ? "#ff3040" : "black"} />
+          <Ionicons name={item.isLiked ? "heart" : "heart-outline"} size={26} color={item.isLiked ? "#ff3040" : "black"} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionIcon} >
+        <TouchableOpacity style={styles.actionIcon} onPress={() => router.push('/Commend/postcommend')}>
           <Ionicons name="chatbubble-outline" size={24} color="black" style={{ transform: [{ scaleX: -1 }] }} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionIcon}>
+        <TouchableOpacity style={styles.actionIcon} onPress={() => router.push('/Commend/sharemodel')}>
           <Feather name="send" size={24} color="black" />
         </TouchableOpacity>
       </View>
@@ -179,7 +179,7 @@ const PostItem = ({ item }) => (
       </Text>
 
       {item.commentsCount > 0 && (
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/Commend/postcommend')}>
           <Text style={styles.viewCommentsText}>View all {item.commentsCount} comments</Text>
         </TouchableOpacity>
       )}
