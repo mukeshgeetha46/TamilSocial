@@ -132,6 +132,57 @@ const SuggestedBlock = () => (
   </View>
 );
 
+const EmptyState = () => (
+  <View style={styles.emptyStateContainer}>
+    <View style={styles.emptyIllustrationContainer}>
+      <View style={styles.emptyIllustrationCircle}>
+        <Ionicons name="images-outline" size={40} color="#8e8e8e" />
+        <View style={styles.emptyIllustrationPlus}>
+          <Feather name="plus" size={14} color="white" />
+        </View>
+      </View>
+    </View>
+
+    <Text style={styles.emptyTitle}>Welcome to InstaClone</Text>
+    <Text style={styles.emptySubtitle}>
+      When you follow people, you'll see the photos and videos they post here.
+    </Text>
+
+    <TouchableOpacity style={styles.findPeopleButton}>
+      <Text style={styles.findPeopleButtonText}>Find People to Follow</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity style={styles.createPostButton}>
+      <Text style={styles.createPostButtonText}>Create Your First Post</Text>
+    </TouchableOpacity>
+
+    <View style={styles.suggestedSection}>
+      <View style={styles.suggestedHeader}>
+        <Text style={styles.suggestedTitle}>Suggested for you</Text>
+        <TouchableOpacity>
+          <Text style={styles.seeAllText}>See All</Text>
+        </TouchableOpacity>
+      </View>
+      <FlatList
+        data={SUGGESTED_USERS}
+        renderItem={({ item }) => (
+          <View style={styles.suggestedUserCard}>
+            <Image source={item.image} style={styles.suggestedUserAvatar} />
+            <Text style={styles.suggestedUsername} numberOfLines={1}>{item.username}</Text>
+            <TouchableOpacity style={styles.suggestedFollowButton}>
+              <Text style={styles.suggestedFollowText}>Follow</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        keyExtractor={item => item.id}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.suggestedUserList}
+      />
+    </View>
+  </View>
+);
+
 const PostItem = ({ item }) => (
   <View style={styles.postContainer}>
     {/* Post Header */}
@@ -223,6 +274,7 @@ export default function HomeScreen() {
         renderItem={renderItem}
         keyExtractor={item => item.id}
         ListHeaderComponent={<StoriesMap />}
+        ListEmptyComponent={<EmptyState />}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
@@ -519,6 +571,142 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   followButtonText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 13,
+  },
+
+  // Empty State Styles
+  emptyStateContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  emptyIllustrationContainer: {
+    marginBottom: 20,
+  },
+  emptyIllustrationCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#f1f1f1',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  emptyIllustrationPlus: {
+    position: 'absolute',
+    bottom: 5,
+    right: 5,
+    backgroundColor: '#0095f6',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#ffffff',
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#262626',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#8e8e8e',
+    textAlign: 'center',
+    paddingHorizontal: 40,
+    lineHeight: 20,
+    marginBottom: 30,
+  },
+  findPeopleButton: {
+    backgroundColor: '#0095f6',
+    width: '85%',
+    height: 48,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  findPeopleButtonText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  createPostButton: {
+    backgroundColor: '#ffffff',
+    width: '85%',
+    height: 48,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#dbdbdb',
+    marginBottom: 40,
+  },
+  createPostButtonText: {
+    color: '#262626',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  suggestedSection: {
+    width: '100%',
+    paddingTop: 20,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#dbdbdb',
+  },
+  suggestedHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 15,
+  },
+  suggestedTitle: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#262626',
+  },
+  seeAllText: {
+    color: '#0095f6',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  suggestedUserList: {
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  suggestedUserCard: {
+    width: 130,
+    padding: 15,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#dbdbdb',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  suggestedUserAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginBottom: 10,
+  },
+  suggestedUsername: {
+    fontWeight: 'bold',
+    fontSize: 13,
+    color: '#262626',
+    marginBottom: 10,
+  },
+  suggestedFollowButton: {
+    backgroundColor: '#0095f6',
+    width: '100%',
+    paddingVertical: 6,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  suggestedFollowText: {
     color: '#ffffff',
     fontWeight: 'bold',
     fontSize: 13,

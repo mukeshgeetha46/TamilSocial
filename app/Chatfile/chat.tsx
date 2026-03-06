@@ -26,6 +26,21 @@ const CHAT_DATA = [
     { id: '7', name: 'Leo Gomez', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150', message: 'Sounds good man.', time: '3d', unread: false },
 ];
 
+const EmptyChatState = () => (
+    <View style={styles.emptyStateContainer}>
+        <View style={styles.emptyIllustrationCircle}>
+            <Ionicons name="chatbubble-outline" size={50} color="#007AFF" />
+        </View>
+        <Text style={styles.emptyTitle}>No messages yet</Text>
+        <Text style={styles.emptySubtitle}>
+            When you start a conversation, it will appear here.
+        </Text>
+        <TouchableOpacity style={styles.emptyActionButton}>
+            <Text style={styles.emptyActionText}>Send a message</Text>
+        </TouchableOpacity>
+    </View>
+);
+
 export default function ChatList() {
     return (
         <SafeAreaView style={styles.container}>
@@ -65,7 +80,7 @@ export default function ChatList() {
                 {/* Notes / Stories (Horizontal List) */}
                 <View style={styles.notesContainer}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.notesList}>
-                        {NOTES_DATA.map((note) => (
+                        {NOTES_DATA.map((note: any) => (
                             <TouchableOpacity key={note.id} style={styles.noteItem}>
                                 <View style={[
                                     styles.avatarContainer,
@@ -82,35 +97,39 @@ export default function ChatList() {
                     </ScrollView>
                 </View>
 
-                {/* Chat List (Vertical List) */}
-                <View style={styles.chatListContainer}>
-                    {CHAT_DATA.map((chat) => (
-                        <TouchableOpacity key={chat.id} style={styles.chatItem} onPress={() => router.push('/Chatfile/chatmessage')}>
-                            <Image source={{ uri: chat.avatar }} style={styles.chatAvatar} contentFit="cover" />
+                {/* Chat List (Vertical List) or Empty State */}
+                {CHAT_DATA.length > 0 ? (
+                    <View style={styles.chatListContainer}>
+                        {CHAT_DATA.map((chat: any) => (
+                            <TouchableOpacity key={chat.id} style={styles.chatItem} onPress={() => router.push('/Chatfile/chatmessage')}>
+                                <Image source={{ uri: chat.avatar }} style={styles.chatAvatar} contentFit="cover" />
 
-                            <View style={styles.chatContent}>
-                                <View style={styles.chatHeaderRow}>
-                                    <Text style={[styles.chatName, chat.unread && styles.textBold]}>
-                                        {chat.name}
-                                    </Text>
-                                    <Text style={[styles.chatTime, chat.unread && styles.chatTimeUnread]}>
-                                        {chat.time}
-                                    </Text>
-                                </View>
+                                <View style={styles.chatContent}>
+                                    <View style={styles.chatHeaderRow}>
+                                        <Text style={[styles.chatName, chat.unread && styles.textBold]}>
+                                            {chat.name}
+                                        </Text>
+                                        <Text style={[styles.chatTime, chat.unread && styles.chatTimeUnread]}>
+                                            {chat.time}
+                                        </Text>
+                                    </View>
 
-                                <View style={styles.chatMessageRow}>
-                                    <Text
-                                        style={[styles.chatMessage, chat.unread && styles.textBoldBlack]}
-                                        numberOfLines={1}
-                                    >
-                                        {chat.message}
-                                    </Text>
-                                    {chat.unread && <View style={styles.unreadDot} />}
+                                    <View style={styles.chatMessageRow}>
+                                        <Text
+                                            style={[styles.chatMessage, chat.unread && styles.textBoldBlack]}
+                                            numberOfLines={1}
+                                        >
+                                            {chat.message}
+                                        </Text>
+                                        {chat.unread && <View style={styles.unreadDot} />}
+                                    </View>
                                 </View>
-                            </View>
-                        </TouchableOpacity>
-                    ))}
-                </View>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                ) : (
+                    <EmptyChatState />
+                )}
             </ScrollView>
         </SafeAreaView>
     );
@@ -284,5 +303,48 @@ const styles = StyleSheet.create({
         height: 10,
         borderRadius: 5,
         backgroundColor: '#007AFF', // Blue dot
+    },
+
+    // Empty State
+    emptyStateContainer: {
+        paddingTop: 40,
+        alignItems: 'center',
+        paddingHorizontal: 40,
+    },
+    emptyIllustrationCircle: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: '#EBF5FF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    emptyTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#000000',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    emptySubtitle: {
+        fontSize: 16,
+        color: '#8E8E93',
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: 30,
+    },
+    emptyActionButton: {
+        backgroundColor: '#007AFF',
+        width: '100%',
+        height: 50,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    emptyActionText: {
+        color: '#FFFFFF',
+        fontSize: 18,
+        fontWeight: '600',
     },
 });

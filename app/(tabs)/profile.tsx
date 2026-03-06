@@ -67,7 +67,7 @@ export default function ProfileScreen() {
 
             <View style={styles.statsContainer}>
                 <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>{PROFILE_DATA.posts}</Text>
+                    <Text style={styles.statNumber}>{GRID_IMAGES.length}</Text>
                     <Text style={styles.statLabel}>Posts</Text>
                 </View>
                 <TouchableOpacity style={styles.statItem} onPress={() => router.push('/Follower/follower')}>
@@ -79,6 +79,21 @@ export default function ProfileScreen() {
                     <Text style={styles.statLabel}>Following</Text>
                 </TouchableOpacity>
             </View>
+        </View>
+    );
+
+    const EmptyProfileState = () => (
+        <View style={styles.emptyStateContainer}>
+            <View style={styles.emptyIllustrationCircle}>
+                <Feather name="camera" size={40} color="black" />
+            </View>
+            <Text style={styles.emptyTitle}>No Posts Yet</Text>
+            <Text style={styles.emptySubtitle}>
+                When you share photos and videos, they'll appear here.
+            </Text>
+            <TouchableOpacity>
+                <Text style={styles.emptyActionText}>Share your first photo or video</Text>
+            </TouchableOpacity>
         </View>
     );
 
@@ -144,6 +159,7 @@ export default function ProfileScreen() {
                 keyExtractor={(item) => item.id}
                 numColumns={COLUMN_COUNT}
                 ListHeaderComponent={renderTopContent}
+                ListEmptyComponent={EmptyProfileState}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.listContent}
             />
@@ -317,5 +333,42 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         backgroundColor: '#f0f0f0',
+    },
+
+    // Empty State
+    emptyStateContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 60,
+    },
+    emptyIllustrationCircle: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        borderWidth: 2,
+        borderColor: '#000',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    emptyTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#000',
+        marginBottom: 10,
+    },
+    emptySubtitle: {
+        fontSize: 16,
+        color: '#8e8e8e',
+        textAlign: 'center',
+        paddingHorizontal: 40,
+        lineHeight: 22,
+        marginBottom: 20,
+    },
+    emptyActionText: {
+        color: '#0095f6',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

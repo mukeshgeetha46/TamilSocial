@@ -25,8 +25,31 @@ const MASONRY_DATA = [
 ];
 
 // Split data into two columns for masonry layout
-const leftColumnData = MASONRY_DATA.filter((_, index) => index % 2 === 0);
-const rightColumnData = MASONRY_DATA.filter((_, index) => index % 2 !== 0);
+const getMasonryColumns = (data: any[]) => {
+    const leftColumn = data.filter((_, index) => index % 2 === 0);
+    const rightColumn = data.filter((_, index) => index % 2 !== 0);
+    return { leftColumn, rightColumn };
+};
+
+const EmptySearchState = () => (
+    <View style={styles.emptyStateContainer}>
+        <View style={styles.emptyIllustrationContainer}>
+            <View style={styles.emptyIllustrationCircle}>
+                <View style={styles.globeIconContainer}>
+                    <Ionicons name="globe-outline" size={50} color="#E5E5EA" />
+                    <View style={styles.searchBadge}>
+                        <Ionicons name="search" size={24} color="#8E8E93" />
+                    </View>
+                </View>
+            </View>
+        </View>
+
+        <Text style={styles.emptyTitle}>Explore New Creators</Text>
+        <Text style={styles.emptySubtitle}>
+            Start searching for people, hashtags, or topics to see posts here.
+        </Text>
+    </View>
+);
 
 export default function SearchScreen() {
     const [activeCategory, setActiveCategory] = useState('For You');
@@ -104,18 +127,22 @@ export default function SearchScreen() {
                 </ScrollView>
             </View>
 
-            {/* Masonry Grid */}
-            <ScrollView showsVerticalScrollIndicator={false} style={styles.masonryScroll}>
-                <View style={styles.masonryContainer}>
-                    <View style={styles.masonryColumn}>
-                        {leftColumnData.map(renderMasonryItem)}
+            {/* Masonry Grid or Empty State */}
+            {MASONRY_DATA.length > 0 ? (
+                <ScrollView showsVerticalScrollIndicator={false} style={styles.masonryScroll}>
+                    <View style={styles.masonryContainer}>
+                        <View style={styles.masonryColumn}>
+                            {getMasonryColumns(MASONRY_DATA).leftColumn.map(renderMasonryItem)}
+                        </View>
+                        <View style={styles.masonryColumn}>
+                            {getMasonryColumns(MASONRY_DATA).rightColumn.map(renderMasonryItem)}
+                        </View>
                     </View>
-                    <View style={styles.masonryColumn}>
-                        {rightColumnData.map(renderMasonryItem)}
-                    </View>
-                </View>
-                <View style={{ height: 20 }} /> {/* Bottom padding */}
-            </ScrollView>
+                    <View style={{ height: 20 }} /> {/* Bottom padding */}
+                </ScrollView>
+            ) : (
+                <EmptySearchState />
+            )}
         </SafeAreaView>
     );
 }
@@ -220,5 +247,61 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 12,
         fontWeight: '500',
+    },
+
+    // Empty State Styles
+    emptyStateContainer: {
+        flex: 1,
+        alignItems: 'center',
+        paddingTop: 60,
+    },
+    emptyIllustrationContainer: {
+        marginBottom: 30,
+    },
+    emptyIllustrationCircle: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: '#F2F2F7',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    globeIconContainer: {
+        position: 'relative',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    searchBadge: {
+        position: 'absolute',
+        bottom: -5,
+        right: -5,
+        backgroundColor: '#FFFFFF',
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        justifyContent: 'center',
+        alignItems: 'center',
+        // Subtle shadow for the badge
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 3,
+    },
+    emptyTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#1C1C1E',
+        marginBottom: 10,
+    },
+    emptySubtitle: {
+        fontSize: 15,
+        color: '#8E8E93',
+        textAlign: 'center',
+        paddingHorizontal: 40,
+        lineHeight: 22,
     },
 });
