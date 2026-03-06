@@ -1,12 +1,20 @@
+import { toggleTheme } from '@/redux/themeSlice';
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
+
 import { Stack, router } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDispatch, useSelector } from 'react-redux';
+
 
 export default function Settings() {
-    const [isDarkMode, setIsDarkMode] = useState(true);
+    const dispatch = useDispatch();
+    const isDarkMode = useSelector((state: any) => state.theme.darkMode);
 
+    const handleToggle = async () => {
+        dispatch(toggleTheme());
+    };
     return (
         <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
             <Stack.Screen options={{ headerShown: false }} />
@@ -64,7 +72,7 @@ export default function Settings() {
                         </View>
                         <Switch
                             value={isDarkMode}
-                            onValueChange={setIsDarkMode}
+                            onValueChange={handleToggle}
                             trackColor={{ false: '#E5E5EA', true: '#2B8BFA' }}
                             thumbColor="#FFFFFF"
                             ios_backgroundColor="#E5E5EA"
@@ -108,7 +116,7 @@ export default function Settings() {
                 </View>
 
                 {/* Logout Button */}
-                <TouchableOpacity style={styles.logoutBtn}>
+                <TouchableOpacity style={styles.logoutBtn} onPress={() => router.push('/Auth/Register')}>
                     <MaterialIcons name="logout" size={20} color="#FF3B30" />
                     <Text style={styles.logoutText}>Logout</Text>
                 </TouchableOpacity>
