@@ -1,10 +1,13 @@
+import { useGetFollowSuggestionsQuery } from '@/redux/api/followApi';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from "expo-router";
-import React from 'react';
-import { FlatList, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, FlatList, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-
+import { useGetHomeFeedQuery } from '../../redux/api/feedApi';
 // --- MOCK DATA ---
 
 const STORIES = [
@@ -34,11 +37,22 @@ const FEED_DATA = [
     isLiked: false,
   },
   {
+    id: 'p2',
+    type: 'post',
+    user: { username: 'elena_r', location: 'Santorini, Greece', image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop' },
+    image: 'https://i.ytimg.com/vi/hk1QjhtIE9s/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLDEYl7DoZNJ-UCcw4Y9viLBLArVXw',
+    likes: '1,248',
+    caption: 'Golden hour in paradise. ☀️ Taking in every second of this view. #santorini #travelgram #summer2024',
+    commentsCount: 42,
+    time: '2 HOURS AGO',
+    isLiked: false,
+  },
+  {
     id: 'suggested_block',
     type: 'suggested',
   },
   {
-    id: 'p2',
+    id: 'p3',
     type: 'post',
     user: { username: 'chef_marco', location: 'The Pasta Lab, Rome', image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=200&h=200&fit=crop' },
     image: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800&h=800&fit=crop',
@@ -49,6 +63,7 @@ const FEED_DATA = [
     isLiked: true,
   },
 ];
+
 
 
 // --- COMPONENTS ---
@@ -70,7 +85,7 @@ const Header = () => (
   </View>
 );
 
-const StoryItem = ({ item }) => (
+const StoryItem = ({ item }: { item: any }) => (
   <View style={styles.storyContainer}>
     <View style={[styles.storyImageRing, item.hasStory && styles.storyImageRingActive]}>
       <Image source={item.image} style={styles.storyImage} />
@@ -99,7 +114,7 @@ const StoriesMap = () => (
   </View>
 );
 
-const SuggestedItem = ({ item }) => (
+const SuggestedItem = ({ item }: { item: any }) => (
   <View style={styles.suggestedCard}>
     <TouchableOpacity style={styles.suggestedClose}>
       <Feather name="x" size={16} color="#8e8e8e" />
@@ -113,7 +128,7 @@ const SuggestedItem = ({ item }) => (
   </View>
 );
 
-const SuggestedBlock = () => (
+const SuggestedBlock = ({ user }: { user: any }) => (
   <View style={styles.suggestedBlockContainer}>
     <View style={styles.suggestedBlockHeader}>
       <Text style={styles.suggestedBlockTitle}>Suggested for You</Text>
@@ -122,7 +137,7 @@ const SuggestedBlock = () => (
       </TouchableOpacity>
     </View>
     <FlatList
-      data={SUGGESTED_USERS}
+      data={user}
       renderItem={({ item }) => <SuggestedItem item={item} />}
       keyExtractor={item => item.id}
       horizontal
@@ -183,73 +198,111 @@ const EmptyState = () => (
   </View>
 );
 
-const PostItem = ({ item }) => (
-  <View style={styles.postContainer}>
-    {/* Post Header */}
-    <View style={styles.postHeader}>
-      <View style={styles.postHeaderLeft}>
-        <Image source={item.user.image} style={styles.postAvatar} />
-        <View style={styles.postUserInfo}>
-          <Text style={styles.postUsername}>{item.user.username}</Text>
-          <Text style={styles.postLocation}>{item.user.location}</Text>
-        </View>
-      </View>
-      <TouchableOpacity>
-        <MaterialCommunityIcons name="dots-horizontal" size={24} color="black" />
-      </TouchableOpacity>
-    </View>
+const PostItem = ({ item, onLike }: { item: any; onLike: (id: string) => void }) => {
+  const scale = useSharedValue(0);
+  const opacity = useSharedValue(0);
 
-    {/* Post Image */}
-    <Image source={item.image} style={styles.postImage} contentFit="cover" />
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
 
-    {/* Post Actions */}
-    <View style={styles.postActions}>
-      <View style={styles.postActionsLeft}>
-        <TouchableOpacity style={styles.actionIcon}>
-          <Ionicons name={item.isLiked ? "heart" : "heart-outline"} size={26} color={item.isLiked ? "#ff3040" : "black"} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionIcon} onPress={() => router.push('/Commend/postcommend')}>
-          <Ionicons name="chatbubble-outline" size={24} color="black" style={{ transform: [{ scaleX: -1 }] }} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionIcon} onPress={() => router.push('/Commend/sharemodel')}>
-          <Feather name="send" size={24} color="black" />
-        </TouchableOpacity>
-      </View>
-      <TouchableOpacity style={styles.actionIconRight}>
-        <Feather name="bookmark" size={24} color="black" />
-      </TouchableOpacity>
-    </View>
+  const playAnimation = () => {
+    scale.value = 0;
+    opacity.value = 1;
+    scale.value = withSequence(
+      withSpring(1, { damping: 10, stiffness: 100 }),
+      withDelay(500, withSpring(0))
+    );
+    opacity.value = withDelay(1000, withTiming(0));
+  };
 
-    {/* Post Details */}
-    <View style={styles.postDetails}>
-      <Text style={styles.likesText}>{item.likes} likes</Text>
+  const handleLike = () => {
+    onLike(item.id);
+    playAnimation();
+  };
 
-      <Text style={styles.captionText} numberOfLines={2}>
-        <Text style={styles.captionUsername}>{item.user.username} </Text>
-        {item.caption}
-      </Text>
+  const doubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .onStart(() => {
+      runOnJS(handleLike)();
+    });
 
-      {item.commentsCount > 0 && (
-        <TouchableOpacity onPress={() => router.push('/Commend/postcommend')}>
-          <Text style={styles.viewCommentsText}>View all {item.commentsCount} comments</Text>
-        </TouchableOpacity>
-      )}
-
-      <Text style={styles.timeText}>{item.time}</Text>
-
-      {/* Add Comment */}
-      <View style={styles.addCommentContainer}>
-        <View style={styles.addCommentLeft}>
-          <Image source={STORIES[0].image} style={styles.addCommentAvatar} />
-          <Text style={styles.addCommentPlaceholder}>Add a comment...</Text>
+  return (
+    <View style={styles.postContainer}>
+      {/* Post Header */}
+      <View style={styles.postHeader}>
+        <View style={styles.postHeaderLeft}>
+          <Image source={item.user.image} style={styles.postAvatar} />
+          <View style={styles.postUserInfo}>
+            <Text style={styles.postUsername}>{item.user.username}</Text>
+            <Text style={styles.postLocation}>{item.user.location}</Text>
+          </View>
         </View>
         <TouchableOpacity>
-          <Text style={styles.postButtonText}>Post</Text>
+          <MaterialCommunityIcons name="dots-horizontal" size={24} color="black" />
         </TouchableOpacity>
       </View>
+
+      {/* Post Image with Double Tap */}
+      <GestureDetector gesture={doubleTapGesture}>
+        <View style={styles.imageContainer}>
+          <Image source={item.image} style={styles.postImage} contentFit="cover" />
+          <Animated.View style={[styles.heartOverlay, animatedStyle]}>
+            <Ionicons name="heart" size={100} color="white" />
+          </Animated.View>
+        </View>
+      </GestureDetector>
+
+      {/* Post Actions */}
+      <View style={styles.postActions}>
+        <View style={styles.postActionsLeft}>
+          <TouchableOpacity style={styles.actionIcon} onPress={handleLike}>
+            <Ionicons name={item.isLiked ? "heart" : "heart-outline"} size={26} color={item.isLiked ? "#ff3040" : "black"} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionIcon} onPress={() => router.push('/Commend/postcommend')}>
+            <Ionicons name="chatbubble-outline" size={24} color="black" style={{ transform: [{ scaleX: -1 }] }} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionIcon} onPress={() => router.push('/Commend/sharemodel')}>
+            <Feather name="send" size={24} color="black" />
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={styles.actionIconRight}>
+          <Feather name="bookmark" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Post Details */}
+      <View style={styles.postDetails}>
+        <Text style={styles.likesText}>{item.likes} likes</Text>
+
+        <Text style={styles.captionText} numberOfLines={2}>
+          <Text style={styles.captionUsername}>{item.user.username} </Text>
+          {item.caption}
+        </Text>
+
+        {item.commentsCount > 0 && (
+          <TouchableOpacity onPress={() => router.push('/Commend/postcommend')}>
+            <Text style={styles.viewCommentsText}>View all {item.commentsCount} comments</Text>
+          </TouchableOpacity>
+        )}
+
+        <Text style={styles.timeText}>{item.time}</Text>
+
+        {/* Add Comment */}
+        <View style={styles.addCommentContainer}>
+          <View style={styles.addCommentLeft}>
+            <Image source={STORIES[0].image} style={styles.addCommentAvatar} />
+            <Text style={styles.addCommentPlaceholder}>Add a comment...</Text>
+          </View>
+          <TouchableOpacity>
+            <Text style={styles.postButtonText}>Post</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 
 // --- MAIN SCREEN ---
@@ -257,11 +310,50 @@ const PostItem = ({ item }) => (
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
 
-  const renderItem = ({ item }) => {
+  const [cursor, setCursor] = useState(undefined);
+
+  const { data, isFetching, isLoading, isError, refetch } = useGetHomeFeedQuery({ cursor, limit: 10 });
+  const { data: suggestedData } = useGetFollowSuggestionsQuery();
+  const [feedData, setFeedData] = React.useState([]);
+  const [suggestedUsers, setSuggestedUsers] = React.useState([]);
+  React.useEffect(() => {
+    if (data?.feed) {
+      setFeedData(data.feed);
+    }
+    if (suggestedData?.suggestions) {
+      setSuggestedUsers(suggestedData.suggestions);
+    }
+  }, [data]);
+
+  console.log(suggestedData);
+
+  const onRefresh = () => {
+    refetch();
+  };
+
+
+
+  if (isLoading) {
+    return <ActivityIndicator size="large" color="#0000ff" />
+  }
+  if (isError) {
+    return <Text>Error</Text>
+  }
+
+  const handleLike = (postId: string) => {
+    setFeedData(prevData => prevData.map(post => {
+      if (post.id === postId && post.type === 'post') {
+        return { ...post, isLiked: !post.isLiked } as any;
+      }
+      return post;
+    }));
+  };
+
+  const renderItem = ({ item }: { item: any }) => {
     if (item.type === 'post') {
-      return <PostItem item={item} />;
+      return <PostItem item={item} onLike={handleLike} />;
     } else if (item.type === 'suggested') {
-      return <SuggestedBlock />;
+      return <SuggestedBlock user={suggestedUsers} />;
     }
     return null;
   };
@@ -270,12 +362,14 @@ export default function HomeScreen() {
     <SafeAreaView style={[styles.container, { paddingBottom: 85 }]} edges={['top', 'left', 'right']}>
       <Header />
       <FlatList
-        data={FEED_DATA}
+        data={feedData}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         ListHeaderComponent={<StoriesMap />}
         ListEmptyComponent={<EmptyState />}
         showsVerticalScrollIndicator={false}
+        refreshing={isFetching}
+        onRefresh={onRefresh}
       />
     </SafeAreaView>
   );
@@ -424,6 +518,20 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 400,
     backgroundColor: '#f0f0f0',
+  },
+  imageContainer: {
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  heartOverlay: {
+    position: 'absolute',
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
   },
   postActions: {
     flexDirection: 'row',

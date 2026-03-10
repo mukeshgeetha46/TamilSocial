@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-
+import { useRegisterMutation } from '@/redux/api/authApi';
 export default function RegisterScreen() {
     const colorScheme = useColorScheme() ?? 'light';
     const [fullName, setFullName] = useState('');
@@ -26,6 +26,22 @@ export default function RegisterScreen() {
     const [agreeToTerms, setAgreeToTerms] = useState(false);
 
     const isDark = colorScheme === 'dark';
+
+    const [register, { isLoading, error, data }] = useRegisterMutation();
+
+    const HandleRegister = () => {
+        try {
+            const response = register({
+                fullName,
+                username,
+                email,
+                password,
+            });
+            console.log(response);
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     return (
         <ThemedView style={styles.container}>
@@ -131,7 +147,7 @@ export default function RegisterScreen() {
                             </TouchableOpacity>
 
                             {/* Sign Up Button */}
-                            <TouchableOpacity style={styles.signUpButton}>
+                            <TouchableOpacity style={styles.signUpButton} onPress={HandleRegister}>
                                 <ThemedText style={styles.signUpButtonText}>Sign Up</ThemedText>
                             </TouchableOpacity>
 

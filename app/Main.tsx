@@ -11,18 +11,21 @@ export const unstable_settings = {
     anchor: '(tabs)',
 };
 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 export default function Main() {
     const colorScheme = useColorScheme();
     const isDarkMode = useSelector((state: any) => state.theme.darkMode);
     console.log('💚', isDarkMode === true ? 'Dark' : 'Light')
     return (
-        <ThemeProvider value={isDarkMode === true ? DarkTheme : DefaultTheme}>
-            <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-
-            </Stack>
-            <StatusBar style="auto" />
-        </ThemeProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <ThemeProvider value={isDarkMode === true ? DarkTheme : DefaultTheme}>
+                <Stack>
+                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                    <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+                </Stack>
+                <StatusBar style="auto" />
+            </ThemeProvider>
+        </GestureHandlerRootView>
     );
 }

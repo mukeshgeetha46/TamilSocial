@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useLoginMutation } from '@/redux/api/authApi';
 
 export default function LoginScreen() {
     const colorScheme = useColorScheme() ?? 'light';
@@ -23,6 +24,21 @@ export default function LoginScreen() {
     const [showPassword, setShowPassword] = useState(false);
 
     const isDark = colorScheme === 'dark';
+
+    const [login, { isLoading, error, data }] = useLoginMutation();
+
+    const HandleLogin = async () => {
+        try {
+            const response = await login({
+                email: emailOrUsername,
+                password,
+            }).unwrap();
+            router.push('/(tabs)');
+            console.log(response);
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     return (
         <ThemedView style={styles.container}>
@@ -98,7 +114,7 @@ export default function LoginScreen() {
                             </View>
 
                             {/* Log In Button */}
-                            <TouchableOpacity style={styles.logInButton}>
+                            <TouchableOpacity style={styles.logInButton} onPress={HandleLogin}>
                                 <ThemedText style={styles.logInButtonText}>Log In</ThemedText>
                             </TouchableOpacity>
 

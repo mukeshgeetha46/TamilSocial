@@ -1,3 +1,4 @@
+import { useCreatePostMutation } from '@/redux/api/postApi';
 import { Feather, FontAwesome5, Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Stack, router } from 'expo-router';
@@ -15,6 +16,23 @@ export default function CreateScreen() {
     const [twitter, setTwitter] = useState(false);
     const [tumblr, setTumblr] = useState(false);
 
+    const [createPost, { isLoading }] = useCreatePostMutation();
+
+    const handleShare = async () => {
+        try {
+            const response = await createPost({
+                media: [{ url: "https://i.pinimg.com/736x/f8/7f/e8/f87fe89cfc62f71e7097974579b680de.jpg", type: "image" }],
+                caption: "Golden hour 🌅 #travel",
+                hashtags: ["travel", "photography"],
+                location: { name: "Santorini, Greece", latitude: 36.39, longitude: 25.46 },
+            }).unwrap();
+            console.log(response);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+
     return (
         <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
             <Stack.Screen options={{ headerShown: false }} />
@@ -25,7 +43,7 @@ export default function CreateScreen() {
                     <Ionicons name="close" size={26} color="#000" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>New Post</Text>
-                <TouchableOpacity style={styles.headerSide}>
+                <TouchableOpacity style={styles.headerSide} onPress={handleShare}>
                     <Text style={styles.shareText}>Share</Text>
                 </TouchableOpacity>
             </View>
