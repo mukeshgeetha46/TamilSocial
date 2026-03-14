@@ -11,13 +11,15 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDispatch } from 'react-redux';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useLoginMutation } from '@/redux/api/authApi';
-
+import { setUser } from '../../redux/authSlice';
 export default function LoginScreen() {
+    const dispatch = useDispatch();
     const colorScheme = useColorScheme() ?? 'light';
     const [emailOrUsername, setEmailOrUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -34,7 +36,8 @@ export default function LoginScreen() {
                 password,
             }).unwrap();
             router.push('/(tabs)');
-            console.log(response);
+            dispatch(setUser(response.user))
+            console.log(response.user);
         } catch (error) {
             console.log(error);
         }

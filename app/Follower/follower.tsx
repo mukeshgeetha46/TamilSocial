@@ -1,10 +1,11 @@
+import { useGetFollowersQuery } from '@/redux/api/followApi';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Stack, router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { useSelector } from 'react-redux';
 type Follower = {
     id: string;
     username: string;
@@ -28,8 +29,21 @@ const INITIAL_FOLLOWERS: Follower[] = [
 const FOLLOWER_COUNT = '2,482';
 
 export default function Followers() {
-    const [followers, setFollowers] = useState<Follower[]>(INITIAL_FOLLOWERS);
+    const user = useSelector((state) => state?.auth?.user);
+
     const [search, setSearch] = useState('');
+    const { data, isLoading } = useGetFollowersQuery({
+        userId: "69b037af2f43cfb422e6f47d"
+    });
+
+    const [followers, setFollowers] = useState<Follower[]>([]);
+
+    useEffect(() => {
+        if (data?.followers) {
+            setFollowers(data.followers);
+        }
+    }, [data]);
+
 
     const filtered = followers.filter(f =>
         f.username.toLowerCase().includes(search.toLowerCase()) ||

@@ -1,13 +1,13 @@
 import { useCreatePostMutation } from '@/redux/api/postApi';
 import { Feather, FontAwesome5, Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { Stack, router } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Placeholder thumbnail for the selected media
-const PREVIEW_IMAGE = 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&q=80&w=200';
+const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&q=80&w=200';
 
 export default function CreateScreen() {
     const [caption, setCaption] = useState('');
@@ -15,23 +15,70 @@ export default function CreateScreen() {
     const [facebook, setFacebook] = useState(true);
     const [twitter, setTwitter] = useState(false);
     const [tumblr, setTumblr] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     const [createPost, { isLoading }] = useCreatePostMutation();
 
-    const handleShare = async () => {
-        try {
-            const response = await createPost({
-                media: [{ url: "https://i.pinimg.com/736x/f8/7f/e8/f87fe89cfc62f71e7097974579b680de.jpg", type: "image" }],
-                caption: "Golden hour 🌅 #travel",
-                hashtags: ["travel", "photography"],
-                location: { name: "Santorini, Greece", latitude: 36.39, longitude: 25.46 },
-            }).unwrap();
-            console.log(response);
-        } catch (error) {
-            console.log(error);
+    const handlePickImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            alert('Permission to access media library is required.');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+        });
+
+        if (!result.canceled && result.assets.length > 0) {
+            setSelectedImage(result.assets[0].uri);
         }
     };
 
+    const handleShare = async () => {
+        if (!selectedImage) {
+            alert('Please select an image first.');
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+
+            if (selectedImage) {
+                const ext = selectedImage.split(".").pop();
+                // Image
+                formData.append("media", {
+                    uri: selectedImage,
+                    name: `Post.${ext}`,
+                    type: `image/${ext}`,
+                } as any);
+            }
+
+            // Other fields
+            formData.append("caption", caption || "Golden hour 🌅 #travel");
+            formData.append("hashtags", JSON.stringify(["travel", "photography"]));
+            formData.append(
+                "location",
+                JSON.stringify({
+                    name: location,
+                    latitude: 36.39,
+                    longitude: 25.46,
+                })
+            );
+
+            const response = await createPost(formData).unwrap();
+
+            console.log(response);
+            router.back();
+
+        } catch (error) {
+            console.log(error);
+        }
+
+    };
 
     return (
         <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -43,8 +90,11 @@ export default function CreateScreen() {
                     <Ionicons name="close" size={26} color="#000" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>New Post</Text>
-                <TouchableOpacity style={styles.headerSide} onPress={handleShare}>
-                    <Text style={styles.shareText}>Share</Text>
+                <TouchableOpacity style={styles.headerSide} onPress={handleShare} disabled={isLoading}>
+                    {isLoading
+                        ? <ActivityIndicator size="small" color="#2B8BFA" />
+                        : <Text style={[styles.shareText, !selectedImage && styles.shareTextDisabled]}>Share</Text>
+                    }
                 </TouchableOpacity>
             </View>
 
@@ -52,7 +102,19 @@ export default function CreateScreen() {
 
                 {/* Caption Area */}
                 <View style={styles.captionContainer}>
-                    <Image source={{ uri: PREVIEW_IMAGE }} style={styles.previewImage} contentFit="cover" />
+                    <TouchableOpacity onPress={handlePickImage} style={styles.previewWrapper}>
+                        <Image
+                            source={{ uri: selectedImage ?? PLACEHOLDER_IMAGE }}
+                            style={styles.previewImage}
+                            contentFit="cover"
+                        />
+                        {/* Overlay icon when no image selected */}
+                        {!selectedImage && (
+                            <View style={styles.pickOverlay}>
+                                <Ionicons name="add" size={22} color="#FFF" />
+                            </View>
+                        )}
+                    </TouchableOpacity>
                     <TextInput
                         style={styles.captionInput}
                         placeholder="Write a caption..."
@@ -117,7 +179,6 @@ export default function CreateScreen() {
                 {/* Also Post To Section */}
                 <Text style={styles.sectionHeader}>ALSO POST TO</Text>
 
-                {/* Facebook */}
                 <View style={styles.settingRow}>
                     <View style={styles.settingLeft}>
                         <View style={[styles.socialIconBg, { backgroundColor: '#1877F2' }]}>
@@ -125,18 +186,11 @@ export default function CreateScreen() {
                         </View>
                         <Text style={styles.settingLabel}>Facebook</Text>
                     </View>
-                    <Switch
-                        value={facebook}
-                        onValueChange={setFacebook}
-                        trackColor={{ false: '#E5E5EA', true: '#2B8BFA' }}
-                        thumbColor="#FFFFFF"
-                        ios_backgroundColor="#E5E5EA"
-                    />
+                    <Switch value={facebook} onValueChange={setFacebook} trackColor={{ false: '#E5E5EA', true: '#2B8BFA' }} thumbColor="#FFFFFF" ios_backgroundColor="#E5E5EA" />
                 </View>
 
                 <View style={styles.rowDivider} />
 
-                {/* Twitter */}
                 <View style={styles.settingRow}>
                     <View style={styles.settingLeft}>
                         <View style={[styles.socialIconBg, { backgroundColor: '#1DA1F2' }]}>
@@ -144,18 +198,11 @@ export default function CreateScreen() {
                         </View>
                         <Text style={styles.settingLabel}>Twitter</Text>
                     </View>
-                    <Switch
-                        value={twitter}
-                        onValueChange={setTwitter}
-                        trackColor={{ false: '#E5E5EA', true: '#2B8BFA' }}
-                        thumbColor="#FFFFFF"
-                        ios_backgroundColor="#E5E5EA"
-                    />
+                    <Switch value={twitter} onValueChange={setTwitter} trackColor={{ false: '#E5E5EA', true: '#2B8BFA' }} thumbColor="#FFFFFF" ios_backgroundColor="#E5E5EA" />
                 </View>
 
                 <View style={styles.rowDivider} />
 
-                {/* Tumblr */}
                 <View style={styles.settingRow}>
                     <View style={styles.settingLeft}>
                         <View style={[styles.socialIconBg, { backgroundColor: '#35465C' }]}>
@@ -163,18 +210,11 @@ export default function CreateScreen() {
                         </View>
                         <Text style={styles.settingLabel}>Tumblr</Text>
                     </View>
-                    <Switch
-                        value={tumblr}
-                        onValueChange={setTumblr}
-                        trackColor={{ false: '#E5E5EA', true: '#2B8BFA' }}
-                        thumbColor="#FFFFFF"
-                        ios_backgroundColor="#E5E5EA"
-                    />
+                    <Switch value={tumblr} onValueChange={setTumblr} trackColor={{ false: '#E5E5EA', true: '#2B8BFA' }} thumbColor="#FFFFFF" ios_backgroundColor="#E5E5EA" />
                 </View>
 
                 <View style={styles.divider} />
 
-                {/* Advanced Settings */}
                 <TouchableOpacity style={styles.settingRow}>
                     <Text style={styles.advancedText}>Advanced Settings</Text>
                     <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
@@ -187,123 +227,38 @@ export default function CreateScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#FFFFFF',
-    },
+    container: { flex: 1, backgroundColor: '#FFFFFF' },
     header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: '#E5E5EA',
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        paddingHorizontal: 16, paddingVertical: 12,
+        borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E5EA',
     },
-    headerSide: {
-        width: 52,
-    },
-    headerTitle: {
-        fontSize: 17,
-        fontWeight: '700',
-        color: '#000',
-        textAlign: 'center',
-    },
-    shareText: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#2B8BFA',
-        textAlign: 'right',
-        width: 52,
-    },
-    captionContainer: {
-        flexDirection: 'row',
-        paddingHorizontal: 16,
-        paddingVertical: 16,
-        alignItems: 'flex-start',
-    },
-    previewImage: {
-        width: 72,
-        height: 72,
+    headerSide: { width: 52 },
+    headerTitle: { fontSize: 17, fontWeight: '700', color: '#000', textAlign: 'center' },
+    shareText: { fontSize: 16, fontWeight: '700', color: '#2B8BFA', textAlign: 'right', width: 52 },
+    shareTextDisabled: { color: '#AEAEB2' },
+    captionContainer: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 16, alignItems: 'flex-start' },
+    previewWrapper: { marginRight: 14, position: 'relative' },
+    previewImage: { width: 72, height: 72, borderRadius: 6, backgroundColor: '#E5E5EA' },
+    pickOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.35)',
         borderRadius: 6,
-        backgroundColor: '#E5E5EA',
-        marginRight: 14,
-    },
-    captionInput: {
-        flex: 1,
-        fontSize: 15,
-        color: '#1C1C1E',
-        minHeight: 72,
-        textAlignVertical: 'top',
-        paddingTop: 0,
-    },
-    iconRow: {
-        flexDirection: 'row',
-        paddingHorizontal: 12,
-        paddingBottom: 12,
-        gap: 4,
-    },
-    iconBtn: {
-        padding: 8,
-    },
-    divider: {
-        height: 8,
-        backgroundColor: '#F2F2F7',
-    },
-    rowDivider: {
-        height: StyleSheet.hairlineWidth,
-        backgroundColor: '#E5E5EA',
-        marginLeft: 56,
-    },
-    settingRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-    },
-    settingLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
-    },
-    settingIcon: {
-        marginRight: 16,
-        width: 24,
-    },
-    settingLabel: {
-        fontSize: 15,
-        color: '#1C1C1E',
-        fontWeight: '500',
-    },
-    settingSubtext: {
-        fontSize: 13,
-        color: '#2B8BFA',
-        marginTop: 2,
-    },
-    sectionHeader: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#8E8E93',
-        letterSpacing: 0.5,
-        paddingHorizontal: 16,
-        paddingTop: 16,
-        paddingBottom: 8,
-    },
-    socialIconBg: {
-        width: 32,
-        height: 32,
-        borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 14,
     },
-    advancedText: {
-        fontSize: 15,
-        color: '#2B8BFA',
-        fontWeight: '500',
-    },
-    bottomPad: {
-        height: 40,
-    },
+    captionInput: { flex: 1, fontSize: 15, color: '#1C1C1E', minHeight: 72, textAlignVertical: 'top', paddingTop: 0 },
+    iconRow: { flexDirection: 'row', paddingHorizontal: 12, paddingBottom: 12, gap: 4 },
+    iconBtn: { padding: 8 },
+    divider: { height: 8, backgroundColor: '#F2F2F7' },
+    rowDivider: { height: StyleSheet.hairlineWidth, backgroundColor: '#E5E5EA', marginLeft: 56 },
+    settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14 },
+    settingLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+    settingIcon: { marginRight: 16, width: 24 },
+    settingLabel: { fontSize: 15, color: '#1C1C1E', fontWeight: '500' },
+    settingSubtext: { fontSize: 13, color: '#2B8BFA', marginTop: 2 },
+    sectionHeader: { fontSize: 12, fontWeight: '600', color: '#8E8E93', letterSpacing: 0.5, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
+    socialIconBg: { width: 32, height: 32, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
+    advancedText: { fontSize: 15, color: '#2B8BFA', fontWeight: '500' },
+    bottomPad: { height: 40 },
 });

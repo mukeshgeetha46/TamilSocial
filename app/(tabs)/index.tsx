@@ -1,4 +1,4 @@
-import { useGetFollowSuggestionsQuery } from '@/redux/api/followApi';
+import { useFollowMutation, useGetFollowSuggestionsQuery } from '@/redux/api/followApi';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from "expo-router";
@@ -68,7 +68,42 @@ const FEED_DATA = [
 
 // --- COMPONENTS ---
 
+const getAvatarColor = (name: string) => {
+  const colors = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD',
+    '#D4A5A5', '#9B59B6', '#3498DB', '#E67E22', '#2ECC71'
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
+const UserAvatar = ({ image, name, size, style }: { image?: any; name: string; size: number; style?: any }) => {
+  const initial = name.charAt(0).toUpperCase();
+  const backgroundColor = getAvatarColor(name);
+
+  if (image && (typeof image === 'string' ? image.trim() !== '' : true)) {
+    return <Image source={image} style={[{ width: size, height: size, borderRadius: size / 2 }, style]} />;
+  }
+
+  return (
+    <View style={[{
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor,
+      justifyContent: 'center',
+      alignItems: 'center'
+    }, style]}>
+      <Text style={{ color: 'white', fontWeight: 'bold', fontSize: size * 0.4 }}>{initial}</Text>
+    </View>
+  );
+};
+
 const Header = () => (
+
   <View style={styles.header}>
     <Text style={styles.headerTitle}>InstaClone</Text>
     <View style={styles.headerIcons}>
@@ -88,7 +123,7 @@ const Header = () => (
 const StoryItem = ({ item }: { item: any }) => (
   <View style={styles.storyContainer}>
     <View style={[styles.storyImageRing, item.hasStory && styles.storyImageRingActive]}>
-      <Image source={item.image} style={styles.storyImage} />
+      <UserAvatar image={item.image} name={item.username} size={60} />
     </View>
     {item.isUser && (
       <View style={styles.addStoryIcon}>
@@ -114,21 +149,21 @@ const StoriesMap = () => (
   </View>
 );
 
-const SuggestedItem = ({ item }: { item: any }) => (
+const SuggestedItem = ({ item, handleFollow }: { item: any, handleFollow: (id: string) => void }) => (
   <View style={styles.suggestedCard}>
     <TouchableOpacity style={styles.suggestedClose}>
       <Feather name="x" size={16} color="#8e8e8e" />
     </TouchableOpacity>
-    <Image source={item.image} style={styles.suggestedImage} />
+    <UserAvatar image={item.image} name={item.username} size={60} style={{ marginBottom: 10 }} />
     <Text style={styles.suggestedUsername} numberOfLines={1}>{item.username}</Text>
     <Text style={styles.suggestedSubtitle} numberOfLines={1}>{item.subtitle}</Text>
-    <TouchableOpacity style={styles.followButton}>
-      <Text style={styles.followButtonText}>Follow</Text>
+    <TouchableOpacity style={styles.followButton} onPress={() => handleFollow(item.id)}>
+      <Text style={styles.followButtonText}>{item.isVerified ? 'Unfollow' : 'Follow'}</Text>
     </TouchableOpacity>
   </View>
 );
 
-const SuggestedBlock = ({ user }: { user: any }) => (
+const SuggestedBlock = ({ user, handleFollow }: { user: any, handleFollow: (id: string) => void }) => (
   <View style={styles.suggestedBlockContainer}>
     <View style={styles.suggestedBlockHeader}>
       <Text style={styles.suggestedBlockTitle}>Suggested for You</Text>
@@ -138,7 +173,7 @@ const SuggestedBlock = ({ user }: { user: any }) => (
     </View>
     <FlatList
       data={user}
-      renderItem={({ item }) => <SuggestedItem item={item} />}
+      renderItem={({ item }) => <SuggestedItem item={item} handleFollow={handleFollow} />}
       keyExtractor={item => item.id}
       horizontal
       showsHorizontalScrollIndicator={false}
@@ -147,7 +182,7 @@ const SuggestedBlock = ({ user }: { user: any }) => (
   </View>
 );
 
-const EmptyState = () => (
+const EmptyState = ({ user, handleFollow }) => (
   <View style={styles.emptyStateContainer}>
     <View style={styles.emptyIllustrationContainer}>
       <View style={styles.emptyIllustrationCircle}>
@@ -179,12 +214,12 @@ const EmptyState = () => (
         </TouchableOpacity>
       </View>
       <FlatList
-        data={SUGGESTED_USERS}
+        data={user}
         renderItem={({ item }) => (
           <View style={styles.suggestedUserCard}>
-            <Image source={item.image} style={styles.suggestedUserAvatar} />
+            <UserAvatar image={item.image} name={item.username} size={60} style={{ marginBottom: 10 }} />
             <Text style={styles.suggestedUsername} numberOfLines={1}>{item.username}</Text>
-            <TouchableOpacity style={styles.suggestedFollowButton}>
+            <TouchableOpacity style={styles.suggestedFollowButton} onPress={() => handleFollow(item.id)}>
               <Text style={styles.suggestedFollowText}>Follow</Text>
             </TouchableOpacity>
           </View>
@@ -233,7 +268,7 @@ const PostItem = ({ item, onLike }: { item: any; onLike: (id: string) => void })
       {/* Post Header */}
       <View style={styles.postHeader}>
         <View style={styles.postHeaderLeft}>
-          <Image source={item.user.image} style={styles.postAvatar} />
+          <UserAvatar image={item.user.image} name={item.user.username} size={36} />
           <View style={styles.postUserInfo}>
             <Text style={styles.postUsername}>{item.user.username}</Text>
             <Text style={styles.postLocation}>{item.user.location}</Text>
@@ -292,7 +327,7 @@ const PostItem = ({ item, onLike }: { item: any; onLike: (id: string) => void })
         {/* Add Comment */}
         <View style={styles.addCommentContainer}>
           <View style={styles.addCommentLeft}>
-            <Image source={STORIES[0].image} style={styles.addCommentAvatar} />
+            <UserAvatar image={STORIES[0].image} name={STORIES[0].username} size={24} />
             <Text style={styles.addCommentPlaceholder}>Add a comment...</Text>
           </View>
           <TouchableOpacity>
@@ -314,6 +349,8 @@ export default function HomeScreen() {
 
   const { data, isFetching, isLoading, isError, refetch } = useGetHomeFeedQuery({ cursor, limit: 10 });
   const { data: suggestedData } = useGetFollowSuggestionsQuery();
+  const [follow, { isLoading: followLoading, error: followError, data: followData }] = useFollowMutation();
+
   const [feedData, setFeedData] = React.useState([]);
   const [suggestedUsers, setSuggestedUsers] = React.useState([]);
   React.useEffect(() => {
@@ -325,7 +362,19 @@ export default function HomeScreen() {
     }
   }, [data]);
 
-  console.log(suggestedData);
+
+  const HandleFollow = async (userId) => {
+    await follow(userId);
+    setSuggestedUsers((suggestedUsers = []) => {
+      if (suggestedUsers.find(user => user.id === userId)) {
+        return suggestedUsers.map(user =>
+          user.id === userId ? { ...user, isVerified: true } : user
+        );
+      }
+      return suggestedUsers;
+    });
+
+  };
 
   const onRefresh = () => {
     refetch();
@@ -352,8 +401,8 @@ export default function HomeScreen() {
   const renderItem = ({ item }: { item: any }) => {
     if (item.type === 'post') {
       return <PostItem item={item} onLike={handleLike} />;
-    } else if (item.type === 'suggested') {
-      return <SuggestedBlock user={suggestedUsers} />;
+    } else if (item.type === 'suggested' && suggestedUsers.length > 0) {
+      return <SuggestedBlock user={suggestedUsers} handleFollow={HandleFollow} />;
     }
     return null;
   };
@@ -366,7 +415,7 @@ export default function HomeScreen() {
         renderItem={renderItem}
         keyExtractor={item => item.id}
         ListHeaderComponent={<StoriesMap />}
-        ListEmptyComponent={<EmptyState />}
+        ListEmptyComponent={<EmptyState user={suggestedUsers} handleFollow={HandleFollow} />}
         showsVerticalScrollIndicator={false}
         refreshing={isFetching}
         onRefresh={onRefresh}

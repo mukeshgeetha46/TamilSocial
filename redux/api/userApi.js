@@ -11,10 +11,10 @@ export const userApi = api.injectEndpoints({
             providesTags: ["User"],
         }),
 
-        // GET /api/users/:username
+        // GET /api/users/:username 
         getUserProfile: builder.query({
-            query: (username) => `/users/${username}`,
-            providesTags: (result, error, username) => [{ type: "User", id: username }],
+            query: () => `/users`,
+            providesTags: ["User"],
         }),
 
         // GET /api/users/:username/posts?page=&limit=

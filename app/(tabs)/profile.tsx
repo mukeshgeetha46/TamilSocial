@@ -1,9 +1,11 @@
+import { useGetAllPostQuery } from '@/redux/api/postApi';
+import { useGetUserProfileQuery } from '@/redux/api/userApi';
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import React from 'react';
-import { Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
@@ -12,35 +14,32 @@ const IMAGE_SIZE = width / COLUMN_COUNT;
 
 // --- MOCK DATA ---
 
-const PROFILE_DATA = {
-    name: 'Alex Rivera',
-    username: 'alex_explorer',
-    avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&h=400&fit=crop', // Simulating the illustrated avatar
-    posts: '142',
-    followers: '12.5K',
-    following: '842',
-    bio: 'Digital Nomad & Adventure Photographer 📸\nExploring the world one pixel at a time.\n📍 Currently: Bali, Indonesia 🌴',
-    link: 'linktr.ee/alex_explorer',
-};
+// const PROFILE_DATA = {
+//     name: 'Alex Rivera',
+//     username: 'alex_explorer',
+//     avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&h=400&fit=crop', // Simulating the illustrated avatar
+//     posts: '142',
+//     followers: '12.5K',
+//     following: '842',
+//     bio: 'Digital Nomad & Adventure Photographer 📸\nExploring the world one pixel at a time.\n📍 Currently: Bali, Indonesia 🌴',
+//     link: 'linktr.ee/alex_explorer',
+// };
 
-const GRID_IMAGES = [
-    { id: '1', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=400&fit=crop' },
-    { id: '2', url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=400&fit=crop' },
-    { id: '3', url: 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=400&h=400&fit=crop' },
-    { id: '4', url: 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=400&h=400&fit=crop' },
-    { id: '5', url: 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=400&h=400&fit=crop' },
-    { id: '6', url: 'https://images.unsplash.com/photo-1542224566-6e85f2e6772f?w=400&h=400&fit=crop' },
-    { id: '7', url: 'https://images.unsplash.com/photo-1470071131384-001b85755b36?w=400&h=400&fit=crop' },
-    { id: '8', url: 'https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=400&h=400&fit=crop' },
-    { id: '9', url: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?w=400&h=400&fit=crop' },
-    { id: '10', url: 'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=400&h=400&fit=crop' },
-    { id: '11', url: 'https://images.unsplash.com/photo-1418065462211-576483bdafb6?w=400&h=400&fit=crop' },
-    { id: '12', url: 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=400&h=400&fit=crop' },
-];
+
 
 export default function ProfileScreen() {
     const insets = useSafeAreaInsets();
+    const { data: PROFILE_DATA, isLoading } = useGetUserProfileQuery();
+    const { data: GRID_IMAGES } = useGetAllPostQuery();
+    console.log(GRID_IMAGES);
 
+    if (isLoading) {
+        return (
+            <View style={styles.container}>
+                <ActivityIndicator size="large" color="#000" />
+            </View>
+        )
+    }
     const handleLinkPress = () => {
         Linking.openURL('https://' + PROFILE_DATA.link);
     };
@@ -67,7 +66,7 @@ export default function ProfileScreen() {
 
             <View style={styles.statsContainer}>
                 <View style={styles.statItem}>
-                    <Text style={styles.statNumber}>{GRID_IMAGES.length}</Text>
+                    <Text style={styles.statNumber}>{PROFILE_DATA.posts}</Text>
                     <Text style={styles.statLabel}>Posts</Text>
                 </View>
                 <TouchableOpacity style={styles.statItem} onPress={() => router.push('/Follower/follower')}>

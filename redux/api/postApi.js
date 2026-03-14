@@ -71,6 +71,11 @@ export const postApi = api.injectEndpoints({
                 `/posts/${postId}/likes?page=${page}&limit=${limit}`,
             providesTags: (result, error, { postId }) => [{ type: "Like", id: `post-${postId}` }],
         }),
+        getAllPost: builder.query({
+            query: () =>
+                `/posts`,
+            providesTags: ["Post"],
+        }),
     }),
 });
 
@@ -81,5 +86,6 @@ export const {
     useDeletePostMutation,
     useToggleArchivePostMutation,
     useGetPostLikesQuery,
+    useGetAllPostQuery
 } = postApi;
 

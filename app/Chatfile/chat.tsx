@@ -1,3 +1,4 @@
+import { useGetInboxQuery } from '@/redux/api/chatNotificationApi';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Stack, router } from 'expo-router';
@@ -42,6 +43,8 @@ const EmptyChatState = () => (
 );
 
 export default function ChatList() {
+    const { data: conversations, isLoading, error } = useGetInboxQuery();
+    console.log('conversations', conversations)
     return (
         <SafeAreaView style={styles.container}>
             <Stack.Screen options={{ headerShown: false }} />

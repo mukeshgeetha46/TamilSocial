@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import * as SecureStore from "expo-secure-store";
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.1.7:5000";
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.1.5:5000";
 
 // ─────────────────────────────────────────────
 // Base query with JWT injection

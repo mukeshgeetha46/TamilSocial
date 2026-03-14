@@ -1,7 +1,9 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { router, Stack } from 'expo-router';
 import React, { useState } from 'react';
 import {
+    Image,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -24,19 +26,53 @@ export default function RegisterScreen() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [agreeToTerms, setAgreeToTerms] = useState(false);
+    const [profileImage, setProfileImage] = useState<string | null>(null);
 
     const isDark = colorScheme === 'dark';
 
     const [register, { isLoading, error, data }] = useRegisterMutation();
 
-    const HandleRegister = () => {
+    const pickImage = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.5,
+        });
+
+        if (!result.canceled) {
+            setProfileImage(result.assets[0].uri);
+        }
+    };
+
+    const HandleRegister = async () => {
         try {
-            const response = register({
-                fullName,
-                username,
-                email,
-                password,
-            });
+
+            const formData = new FormData();
+
+            formData.append("fullName", fullName);
+            formData.append("username", username);
+            formData.append("email", email);
+            formData.append("password", password);
+
+
+            if (profileImage) {
+                const ext = profileImage.split(".").pop();
+
+                formData.append("image", {
+                    uri: profileImage,
+                    name: `shop_logo.${ext}`,
+                    type: `image/${ext}`,
+                } as any);
+                console.log({
+                    uri: profileImage,
+                    name: `shop_logo.${ext}`,
+                    type: `image/${ext}`,
+                });
+            }
+
+            const response = await register(formData);
+            router.push("/Auth/Login");
             console.log(response);
         } catch (error) {
             console.log(error);
@@ -68,6 +104,28 @@ export default function RegisterScreen() {
                         <View style={styles.welcomeContainer}>
                             <ThemedText style={styles.title} type="title">Create Account</ThemedText>
                             <ThemedText style={styles.subtitle}>Join our community and start sharing today.</ThemedText>
+                        </View>
+
+                        {/* Profile Photo Upload */}
+                        <View style={styles.photoUploadContainer}>
+                            <TouchableOpacity onPress={pickImage} style={styles.photoUploadButton}>
+                                {profileImage ? (
+                                    <View>
+                                        <Image source={{ uri: profileImage }} style={styles.profileImage} />
+                                        <View style={[styles.plusBadge, { borderColor: isDark ? '#000' : '#FFF' }]}>
+                                            <Ionicons name="pencil" size={14} color="#FFF" />
+                                        </View>
+                                    </View>
+                                ) : (
+                                    <View style={[styles.dashedCircle, { borderColor: isDark ? '#3A3A3C' : '#E5E5EA' }]}>
+                                        <Ionicons name="camera" size={32} color="#8E8E93" />
+                                        <View style={[styles.plusBadge, { borderColor: isDark ? '#000' : '#FFF' }]}>
+                                            <Ionicons name="add" size={16} color="#FFF" />
+                                        </View>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                            <ThemedText style={styles.addPhotoText}>Add profile photo</ThemedText>
                         </View>
 
                         {/* Form */}
@@ -211,6 +269,45 @@ const styles = StyleSheet.create({
     },
     welcomeContainer: {
         marginBottom: 32,
+    },
+    photoUploadContainer: {
+        alignItems: 'center',
+        marginBottom: 32,
+    },
+    photoUploadButton: {
+        marginBottom: 12,
+    },
+    dashedCircle: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        borderWidth: 2,
+        borderStyle: 'dashed',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'transparent',
+    },
+    profileImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+    },
+    plusBadge: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        backgroundColor: '#2B8BFA',
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 3,
+    },
+    addPhotoText: {
+        fontSize: 14,
+        color: '#8E8E93',
+        fontWeight: '500',
     },
     title: {
         fontSize: 32,

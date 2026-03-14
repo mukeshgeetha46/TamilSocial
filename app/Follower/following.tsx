@@ -1,7 +1,8 @@
+import { useGetFollowingQuery } from '@/redux/api/followApi';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Stack, router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -25,8 +26,27 @@ const INITIAL_FOLLOWING: Person[] = [
 ];
 
 export default function Following() {
-    const [people, setPeople] = useState<Person[]>(INITIAL_FOLLOWING);
+    const { data, isLoading, isError } = useGetFollowingQuery({
+        userId: "69b037af2f43cfb422e6f47d"
+    });
+
+    const [people, setPeople] = useState<Person[]>([]);
     const [search, setSearch] = useState('');
+
+    useEffect(() => {
+        if (data?.following) {
+            setPeople(data.following);
+        }
+    }, [data]);
+
+    if (isLoading) {
+        return <Text>Loading...</Text>;
+    }
+
+    if (isError) {
+        return <Text>Error loading following</Text>;
+    }
+
 
     const filteredPeople = people.filter(p =>
         p.username.toLowerCase().includes(search.toLowerCase()) ||
