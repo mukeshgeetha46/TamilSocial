@@ -3,7 +3,7 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Stack, router } from 'expo-router';
 import React from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
@@ -43,8 +43,13 @@ const EmptyChatState = () => (
 );
 
 export default function ChatList() {
-    const { data: conversations, isLoading, error } = useGetInboxQuery();
-    console.log('conversations', conversations)
+    const { data: CHAT_DATA, isLoading, error } = useGetInboxQuery();
+
+    if (isLoading) {
+        return <ActivityIndicator size="large" color="#000" />
+    }
+
+    console.log('conversations', CHAT_DATA)
     return (
         <SafeAreaView style={styles.container}>
             <Stack.Screen options={{ headerShown: false }} />
@@ -104,7 +109,7 @@ export default function ChatList() {
                 {CHAT_DATA.length > 0 ? (
                     <View style={styles.chatListContainer}>
                         {CHAT_DATA.map((chat: any) => (
-                            <TouchableOpacity key={chat.id} style={styles.chatItem} onPress={() => router.push('/Chatfile/chatmessage')}>
+                            <TouchableOpacity key={chat.id} style={styles.chatItem} onPress={() => router.push(`/Chatfile/Message/${chat.userid}`)}>
                                 <Image source={{ uri: chat.avatar }} style={styles.chatAvatar} contentFit="cover" />
 
                                 <View style={styles.chatContent}>

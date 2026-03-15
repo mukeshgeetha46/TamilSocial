@@ -16,7 +16,10 @@ export const userApi = api.injectEndpoints({
             query: () => `/users`,
             providesTags: ["User"],
         }),
-
+        getFeedUserProfile: builder.query({
+            query: (userId) => `/users/feeduser/${userId}`,
+            providesTags: ["User"],
+        }),
         // GET /api/users/:username/posts?page=&limit=
         getUserPosts: builder.query({
             query: ({ username, page = 1, limit = 12 }) =>
@@ -81,6 +84,7 @@ export const userApi = api.injectEndpoints({
 export const {
     useSearchUsersQuery,
     useGetUserProfileQuery,
+    useGetFeedUserProfileQuery,
     useGetUserPostsQuery,
     useGetUserReelsQuery,
     useGetTaggedPostsQuery,
@@ -88,4 +92,5 @@ export const {
     useUpdateSettingsMutation,
     useSwitchAccountTypeMutation,
     useDeleteAccountMutation,
+
 } = userApi;

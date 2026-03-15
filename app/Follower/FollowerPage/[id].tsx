@@ -1,7 +1,7 @@
-import { useGetFollowersQuery } from '@/redux/api/followApi';
+import { useFollowMutation, useGetFollowersQuery } from '@/redux/api/followApi';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -30,10 +30,10 @@ const FOLLOWER_COUNT = '2,482';
 
 export default function Followers() {
     const user = useSelector((state) => state?.auth?.user);
-
+    const { id } = useLocalSearchParams();
     const [search, setSearch] = useState('');
     const { data, isLoading } = useGetFollowersQuery({
-        userId: "69b037af2f43cfb422e6f47d"
+        userId: id
     });
 
     const [followers, setFollowers] = useState<Follower[]>([]);
@@ -49,9 +49,11 @@ export default function Followers() {
         f.username.toLowerCase().includes(search.toLowerCase()) ||
         f.name.toLowerCase().includes(search.toLowerCase())
     );
+    const [follow, { isLoading: followLoading, error: followError, data: followData }] = useFollowMutation();
 
-    const toggleAction = (id: string) => {
+    const toggleAction = async (id: string) => {
         // "Follow back" toggles to "Remove" (meaning now followed), "Remove" removes from local list
+        await follow(id);
         setFollowers(prev =>
             prev.map(f =>
                 f.id === id ? { ...f, isFollowingBack: !f.isFollowingBack } : f
@@ -59,8 +61,11 @@ export default function Followers() {
         );
     };
 
+
+
+
     const renderItem = ({ item }: { item: Follower }) => (
-        <View style={styles.personRow}>
+        <TouchableOpacity style={styles.personRow} onPress={() => router.push(`/Profile/${item.id}`)}>
             <Image source={{ uri: item.avatar }} style={styles.avatar} contentFit="cover" />
 
             <View style={styles.personInfo}>
@@ -81,7 +86,7 @@ export default function Followers() {
                     {item.isFollowingBack ? 'Remove' : 'Follow back'}
                 </Text>
             </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
     );
 
     return (

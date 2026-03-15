@@ -4,14 +4,16 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, router } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import PostLocation from '../Location/PostLocation';
 
 const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&q=80&w=200';
 
 export default function CreateScreen() {
     const [caption, setCaption] = useState('');
-    const [location] = useState('San Francisco, California');
+    const [location, setLocation] = useState<any>(null);
+    const [isLocationModalVisible, setLocationModalVisible] = useState(false);
     const [facebook, setFacebook] = useState(true);
     const [twitter, setTwitter] = useState(false);
     const [tumblr, setTumblr] = useState(false);
@@ -60,14 +62,16 @@ export default function CreateScreen() {
             // Other fields
             formData.append("caption", caption || "Golden hour 🌅 #travel");
             formData.append("hashtags", JSON.stringify(["travel", "photography"]));
-            formData.append(
-                "location",
-                JSON.stringify({
-                    name: location,
-                    latitude: 36.39,
-                    longitude: 25.46,
-                })
-            );
+            if (location) {
+                formData.append(
+                    "location",
+                    JSON.stringify({
+                        name: location.name,
+                        latitude: location.latitude,
+                        longitude: location.longitude,
+                    })
+                );
+            }
 
             const response = await createPost(formData).unwrap();
 
@@ -152,12 +156,12 @@ export default function CreateScreen() {
                 <View style={styles.rowDivider} />
 
                 {/* Add Location */}
-                <TouchableOpacity style={styles.settingRow}>
+                <TouchableOpacity style={styles.settingRow} onPress={() => setLocationModalVisible(true)}>
                     <View style={styles.settingLeft}>
                         <Ionicons name="location-outline" size={22} color="#3A3A3C" style={styles.settingIcon} />
                         <View>
                             <Text style={styles.settingLabel}>Add Location</Text>
-                            {location ? <Text style={styles.settingSubtext}>{location}</Text> : null}
+                            {location ? <Text style={styles.settingSubtext}>{location.name}</Text> : null}
                         </View>
                     </View>
                     <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
@@ -166,7 +170,7 @@ export default function CreateScreen() {
                 <View style={styles.rowDivider} />
 
                 {/* Add Music */}
-                <TouchableOpacity style={styles.settingRow}>
+                <TouchableOpacity style={styles.settingRow} onPress={() => router.push('/Location/PostMusic')}>
                     <View style={styles.settingLeft}>
                         <Ionicons name="musical-note-outline" size={22} color="#3A3A3C" style={styles.settingIcon} />
                         <Text style={styles.settingLabel}>Add Music</Text>
@@ -194,7 +198,7 @@ export default function CreateScreen() {
                 <View style={styles.settingRow}>
                     <View style={styles.settingLeft}>
                         <View style={[styles.socialIconBg, { backgroundColor: '#1DA1F2' }]}>
-                            <FontAwesome5 name="twitter" size={15} color="#FFF" />
+                            <FontAwesome5 name="twitter" size={15} color="#FFF" />add
                         </View>
                         <Text style={styles.settingLabel}>Twitter</Text>
                     </View>
@@ -222,6 +226,16 @@ export default function CreateScreen() {
 
                 <View style={styles.bottomPad} />
             </ScrollView>
+
+            <Modal visible={isLocationModalVisible} animationType="slide" onRequestClose={() => setLocationModalVisible(false)}>
+                <PostLocation
+                    onDone={(place: any) => {
+                        setLocation(place);
+                        setLocationModalVisible(false);
+                    }}
+                    onCancel={() => setLocationModalVisible(false)}
+                />
+            </Modal>
         </SafeAreaView>
     );
 }

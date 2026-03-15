@@ -1,7 +1,7 @@
 import { useGetFollowingQuery } from '@/redux/api/followApi';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,8 +26,9 @@ const INITIAL_FOLLOWING: Person[] = [
 ];
 
 export default function Following() {
+    const { id } = useLocalSearchParams();
     const { data, isLoading, isError } = useGetFollowingQuery({
-        userId: "69b037af2f43cfb422e6f47d"
+        userId: id
     });
 
     const [people, setPeople] = useState<Person[]>([]);
@@ -60,7 +61,7 @@ export default function Following() {
     };
 
     const renderItem = ({ item }: { item: Person }) => (
-        <View style={styles.personRow}>
+        <TouchableOpacity style={styles.personRow} onPress={() => router.push(`/Profile/${item.id}`)}>
             <Image source={{ uri: item.avatar }} style={styles.avatar} contentFit="cover" />
             <View style={styles.personInfo}>
                 <Text style={styles.username}>{item.username}</Text>
@@ -74,7 +75,7 @@ export default function Following() {
                     {item.isFollowing ? 'Following' : 'Follow'}
                 </Text>
             </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
     );
 
     return (

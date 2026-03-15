@@ -1,10 +1,10 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSendMessageMutation } from '../../redux/api/messageApi';
+import { useSendMessageMutation } from '../../../redux/api/messageApi';
 
 const { width } = Dimensions.get('window');
 
@@ -52,10 +52,14 @@ const MESSAGES = [
 export default function ChatMessage() {
     const [inputText, setInputText] = useState('');
     const [sendMessage] = useSendMessageMutation();
+    const { id } = useLocalSearchParams();
+
+
+    console.log('message user id', id)
 
     const handleSend = async () => {
         try {
-            const response = await sendMessage({ conversationId: "69b42caa859a654634dc20a8", type: "text", body: 'Hii gi' }).unwrap();
+            const response = await sendMessage({ conversationId: id, type: "text", body: 'Hii gi' }).unwrap();
             console.log(response);
         } catch (error) {
             console.log(error);

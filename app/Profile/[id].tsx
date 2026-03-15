@@ -1,9 +1,9 @@
-import { useGetAllPostQuery } from '@/redux/api/postApi';
-import { useGetUserProfileQuery } from '@/redux/api/userApi';
+import { useGetAllUserPostQuery } from '@/redux/api/postApi';
+import { useGetFeedUserProfileQuery } from '@/redux/api/userApi';
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as Linking from 'expo-linking';
-import { router } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,11 +27,14 @@ const IMAGE_SIZE = width / COLUMN_COUNT;
 
 
 
-export default function ProfileScreen() {
+export default function FeedProfileScreen() {
     const insets = useSafeAreaInsets();
-    const { data: PROFILE_DATA, isLoading } = useGetUserProfileQuery();
-    const { data: GRID_IMAGES } = useGetAllPostQuery();
+    const { id } = useLocalSearchParams();
+    const { data: PROFILE_DATA, isLoading } = useGetFeedUserProfileQuery(id);
 
+    const { data: GRID_IMAGES } = useGetAllUserPostQuery(id);
+
+    console.log(PROFILE_DATA);
 
     if (isLoading) {
         return (
@@ -69,11 +72,11 @@ export default function ProfileScreen() {
                     <Text style={styles.statNumber}>{PROFILE_DATA.posts}</Text>
                     <Text style={styles.statLabel}>Posts</Text>
                 </View>
-                <TouchableOpacity style={styles.statItem} onPress={() => router.push(`/Follower/FollowerPage/${PROFILE_DATA?.id}`)}>
+                <TouchableOpacity style={styles.statItem} onPress={() => router.push(`/Follower/FollowerPage/${PROFILE_DATA.id}`)}>
                     <Text style={styles.statNumber}>{PROFILE_DATA.followers}</Text>
                     <Text style={styles.statLabel}>Followers</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.statItem} onPress={() => router.push(`/Follower/FollowingPage/${PROFILE_DATA?.id}`)}>
+                <TouchableOpacity style={styles.statItem} onPress={() => router.push(`/Follower/FollowingPage/${PROFILE_DATA.id}`)}>
                     <Text style={styles.statNumber}>{PROFILE_DATA.following}</Text>
                     <Text style={styles.statLabel}>Following</Text>
                 </TouchableOpacity>
@@ -106,10 +109,16 @@ export default function ProfileScreen() {
         </View>
     );
 
-    const renderActions = () => (
+    const renderActions = (PROFILE_DATA: any) => (
         <View style={styles.actionsContainer}>
-            <TouchableOpacity style={styles.editButton} onPress={() => router.push('/Follower/editprofile')}>
-                <Text style={styles.editButtonText}>Edit Profile</Text>
+            <TouchableOpacity style={styles.editButton} onPress={() => {
+                if (PROFILE_DATA.loggedid === PROFILE_DATA.id) {
+                    router.push('/Follower/editprofile')
+                } else {
+                    router.push(`/Chatfile/Message/${PROFILE_DATA.id}`)
+                }
+            }}>
+                <Text style={styles.editButtonText}>{PROFILE_DATA.loggedid === PROFILE_DATA.id ? "Edit Profile" : "Message"}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.shareButton}>
                 <Text style={styles.shareButtonText}>Share Profile</Text>
@@ -134,11 +143,11 @@ export default function ProfileScreen() {
         </View>
     );
 
-    const renderTopContent = () => (
+    const renderTopContent = (PROFILE_DATA: any) => (
         <View>
             {renderProfileInfo()}
             {renderBio()}
-            {renderActions()}
+            {renderActions(PROFILE_DATA)}
             {renderTabs()}
         </View>
     );
@@ -151,13 +160,14 @@ export default function ProfileScreen() {
 
     return (
         <SafeAreaView style={[styles.container, { paddingBottom: 85 }]} edges={['top', 'left', 'right']}>
+            <Stack.Screen options={{ headerShown: false }} />
             {renderHeader()}
             <FlatList
                 data={GRID_IMAGES}
                 renderItem={renderGridItem}
                 keyExtractor={(item) => item.id}
                 numColumns={COLUMN_COUNT}
-                ListHeaderComponent={renderTopContent}
+                ListHeaderComponent={() => renderTopContent(PROFILE_DATA)}
                 ListEmptyComponent={EmptyProfileState}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.listContent}

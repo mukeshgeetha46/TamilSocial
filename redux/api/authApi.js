@@ -3,7 +3,7 @@ import { api } from "./baseApi";
 
 export const authApi = api.injectEndpoints({
     endpoints: (builder) => ({
-
+        overrideExisting: true,
         // POST /api/auth/register
         register: builder.mutation({
             query: (body) => ({
@@ -16,6 +16,7 @@ export const authApi = api.injectEndpoints({
                     const { data } = await queryFulfilled;
                     await SecureStore.setItemAsync("accessToken", data.accessToken);
                     await SecureStore.setItemAsync("refreshToken", data.refreshToken);
+                    await SecureStore.setItemAsync("user", JSON.stringify(data.user));
                 } catch { }
             },
             invalidatesTags: ["Auth"],
@@ -33,6 +34,7 @@ export const authApi = api.injectEndpoints({
                     const { data } = await queryFulfilled;
                     await SecureStore.setItemAsync("accessToken", data.accessToken);
                     await SecureStore.setItemAsync("refreshToken", data.refreshToken);
+                    await SecureStore.setItemAsync("user", JSON.stringify(data.user));
                 } catch { }
             },
             invalidatesTags: ["Auth"],
@@ -50,6 +52,7 @@ export const authApi = api.injectEndpoints({
                     const { data } = await queryFulfilled;
                     await SecureStore.setItemAsync("accessToken", data.accessToken);
                     await SecureStore.setItemAsync("refreshToken", data.refreshToken);
+                    await SecureStore.setItemAsync("user", JSON.stringify(data.user));
                 } catch { }
             },
         }),
@@ -63,6 +66,7 @@ export const authApi = api.injectEndpoints({
                 } finally {
                     await SecureStore.deleteItemAsync("accessToken");
                     await SecureStore.deleteItemAsync("refreshToken");
+                    await SecureStore.deleteItemAsync("user");
                 }
             },
             invalidatesTags: ["Auth", "Feed", "User"],

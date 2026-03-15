@@ -76,6 +76,11 @@ export const postApi = api.injectEndpoints({
                 `/posts`,
             providesTags: ["Post"],
         }),
+        getAllUserPost: builder.query({
+            query: (userId) =>
+                `/posts/${userId}`,
+            providesTags: ["Post"],
+        }),
     }),
 });
 
@@ -86,6 +91,7 @@ export const {
     useDeletePostMutation,
     useToggleArchivePostMutation,
     useGetPostLikesQuery,
-    useGetAllPostQuery
+    useGetAllPostQuery,
+    useGetAllUserPostQuery
 } = postApi;
 

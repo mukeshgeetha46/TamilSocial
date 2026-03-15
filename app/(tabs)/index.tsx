@@ -150,7 +150,7 @@ const StoriesMap = () => (
 );
 
 const SuggestedItem = ({ item, handleFollow }: { item: any, handleFollow: (id: string) => void }) => (
-  <View style={styles.suggestedCard}>
+  <TouchableOpacity style={styles.suggestedCard} onPress={() => router.push(`/Profile/${item.id}`)}>
     <TouchableOpacity style={styles.suggestedClose}>
       <Feather name="x" size={16} color="#8e8e8e" />
     </TouchableOpacity>
@@ -160,7 +160,7 @@ const SuggestedItem = ({ item, handleFollow }: { item: any, handleFollow: (id: s
     <TouchableOpacity style={styles.followButton} onPress={() => handleFollow(item.id)}>
       <Text style={styles.followButtonText}>{item.isVerified ? 'Unfollow' : 'Follow'}</Text>
     </TouchableOpacity>
-  </View>
+  </TouchableOpacity>
 );
 
 const SuggestedBlock = ({ user, handleFollow }: { user: any, handleFollow: (id: string) => void }) => (
@@ -216,13 +216,13 @@ const EmptyState = ({ user, handleFollow }) => (
       <FlatList
         data={user}
         renderItem={({ item }) => (
-          <View style={styles.suggestedUserCard}>
+          <TouchableOpacity style={styles.suggestedUserCard} onPress={() => router.push(`/Profile/${item.id}`)}>
             <UserAvatar image={item.image} name={item.username} size={60} style={{ marginBottom: 10 }} />
             <Text style={styles.suggestedUsername} numberOfLines={1}>{item.username}</Text>
             <TouchableOpacity style={styles.suggestedFollowButton} onPress={() => handleFollow(item.id)}>
               <Text style={styles.suggestedFollowText}>Follow</Text>
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         )}
         keyExtractor={item => item.id}
         horizontal
@@ -263,17 +263,18 @@ const PostItem = ({ item, onLike }: { item: any; onLike: (id: string) => void })
       runOnJS(handleLike)();
     });
 
+
   return (
     <View style={styles.postContainer}>
       {/* Post Header */}
       <View style={styles.postHeader}>
-        <View style={styles.postHeaderLeft}>
+        <TouchableOpacity style={styles.postHeaderLeft} onPress={() => router.push(`/Profile/${item.user.id}`)}>
           <UserAvatar image={item.user.image} name={item.user.username} size={36} />
           <View style={styles.postUserInfo}>
             <Text style={styles.postUsername}>{item.user.username}</Text>
             <Text style={styles.postLocation}>{item.user.location}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
         <TouchableOpacity>
           <MaterialCommunityIcons name="dots-horizontal" size={24} color="black" />
         </TouchableOpacity>
