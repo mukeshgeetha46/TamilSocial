@@ -153,7 +153,7 @@ export default function FeedProfileScreen() {
     );
 
     const renderGridItem = ({ item }) => (
-        <TouchableOpacity style={styles.gridItem}>
+        <TouchableOpacity style={styles.gridItem} onPress={() => router.push(`/Post/UserPost/${item.id}`)}>
             <Image source={item.url} style={styles.gridImage} contentFit="cover" />
         </TouchableOpacity>
     );

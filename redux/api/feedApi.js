@@ -29,6 +29,15 @@ export const feedApi = api.injectEndpoints({
             providesTags: ["Feed"],
         }),
 
+        getHomeFeedByid: builder.query({
+            query: ({ cursor, limit = 10, id } = {}) => {
+                const params = new URLSearchParams({ limit });
+                if (cursor) params.set("cursor", cursor);
+                if (id) params.set("id", id);
+                return `/feed/home/user?${params}`;
+            },
+            providesTags: ["Feed"],
+        }),
 
         // GET /api/feed/reels?cursor=&limit=
         getReelsFeed: builder.query({
@@ -51,6 +60,7 @@ export const feedApi = api.injectEndpoints({
 
 export const {
     useGetHomeFeedQuery,
+    useGetHomeFeedByidQuery,
     useGetReelsFeedQuery,
 } = feedApi;
 

@@ -1,3 +1,5 @@
+import { api } from "./baseApi";
+
 export const commentApi = api.injectEndpoints({
     endpoints: (builder) => ({
 

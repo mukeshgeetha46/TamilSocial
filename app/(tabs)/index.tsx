@@ -1,4 +1,5 @@
 import { useFollowMutation, useGetFollowSuggestionsQuery } from '@/redux/api/followApi';
+import { useLikeMutation, useUnlikeMutation } from '@/redux/api/likesSaveFeedExploreApi';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from "expo-router";
@@ -8,6 +9,11 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGetHomeFeedQuery } from '../../redux/api/feedApi';
+
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useDispatch } from 'react-redux';
+import { saveApi, useSavePostMutation, useUnsavePostMutation } from '../../redux/api/saveApi';
+import { useCommentSheet } from '../context/CommentSheetContext';
 // --- MOCK DATA ---
 
 const STORIES = [
@@ -233,10 +239,43 @@ const EmptyState = ({ user, handleFollow }) => (
   </View>
 );
 
-const PostItem = ({ item, onLike }: { item: any; onLike: (id: string) => void }) => {
+const CommentItem = ({ comment }) => {
+  return (
+    <View style={styles.container1}>
+      {/* Avatar */}
+      <Image source={{ uri: comment.avatar }} style={styles.avatar} />
+
+      {/* Content */}
+      <View style={styles.content}>
+        <View style={styles.row}>
+          <Text style={styles.username}>{comment.user}</Text>
+          <Text style={styles.time}> • {comment.time}</Text>
+        </View>
+
+        <Text style={styles.text}>{comment.text}</Text>
+
+        <View style={styles.actions}>
+          <TouchableOpacity style={styles.likeBtn}>
+            <Ionicons name="heart-outline" size={16} color="#555" />
+            <Text style={styles.likes}>{comment.likes}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity>
+            <Text style={styles.reply}>Reply</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+
+const PostItem = ({ item, onLike, openSheet }: { item: any; onLike: (id: string) => void; openSheet: () => void }) => {
   const scale = useSharedValue(0);
   const opacity = useSharedValue(0);
-
+  const dispatch = useDispatch();
+  const [savePost, { isLoading, error }] = useSavePostMutation();
+  const [unsavePost, { isLoading: unsaveLoading, error: unsaveError }] = useUnsavePostMutation();
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
     opacity: opacity.value,
@@ -253,7 +292,7 @@ const PostItem = ({ item, onLike }: { item: any; onLike: (id: string) => void })
   };
 
   const handleLike = () => {
-    onLike(item.id);
+    onLike(item.id, item.user.id, item.type);
     playAnimation();
   };
 
@@ -263,6 +302,26 @@ const PostItem = ({ item, onLike }: { item: any; onLike: (id: string) => void })
       runOnJS(handleLike)();
     });
 
+  const HandleSave = async () => {
+    // 1. Call API first
+    try {
+      if (item.isSaved) {
+        await unsavePost(item.id);
+      } else {
+        await savePost({ postId: item.id });
+      }
+
+      // 2. Only update cache after API succeeds
+      dispatch(
+        saveApi.util.updateQueryData('getHomeFeed', { limit: 10 }, (draft) => {
+          const post = draft.feed.find((i) => i.type === 'post' && i.id === item.id);
+          if (post) post.isSaved = !post.isSaved;
+        })
+      );
+    } catch (error) {
+      console.error('Save failed:', error);
+    }
+  };
 
   return (
     <View style={styles.postContainer}>
@@ -296,15 +355,19 @@ const PostItem = ({ item, onLike }: { item: any; onLike: (id: string) => void })
           <TouchableOpacity style={styles.actionIcon} onPress={handleLike}>
             <Ionicons name={item.isLiked ? "heart" : "heart-outline"} size={26} color={item.isLiked ? "#ff3040" : "black"} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionIcon} onPress={() => router.push('/Commend/postcommend')}>
+          <TouchableOpacity style={styles.actionIcon} onPress={openSheet}>
             <Ionicons name="chatbubble-outline" size={24} color="black" style={{ transform: [{ scaleX: -1 }] }} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionIcon} onPress={() => router.push('/Commend/sharemodel')}>
             <Feather name="send" size={24} color="black" />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.actionIconRight}>
-          <Feather name="bookmark" size={24} color="black" />
+        <TouchableOpacity style={styles.actionIconRight} onPress={HandleSave}>
+          <Ionicons
+            name={item.isSaved ? "bookmark" : "bookmark-outline"}
+            size={24}
+            color="black"
+          />
         </TouchableOpacity>
       </View>
 
@@ -347,13 +410,16 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
 
   const [cursor, setCursor] = useState(undefined);
-
+  const { openSheet } = useCommentSheet();
   const { data, isFetching, isLoading, isError, refetch } = useGetHomeFeedQuery({ cursor, limit: 10 });
+
   const { data: suggestedData } = useGetFollowSuggestionsQuery();
   const [follow, { isLoading: followLoading, error: followError, data: followData }] = useFollowMutation();
-
+  const [like, { isLoading: likeLoading, error: likeError, data: likeData }] = useLikeMutation();
+  const [unlike, { isLoading: unlikeLoading, error: unlikeError, data: unlikeData }] = useUnlikeMutation();
   const [feedData, setFeedData] = React.useState([]);
   const [suggestedUsers, setSuggestedUsers] = React.useState([]);
+
   React.useEffect(() => {
     if (data?.feed) {
       setFeedData(data.feed);
@@ -383,45 +449,131 @@ export default function HomeScreen() {
 
 
 
+
+
+  const handleLike = async (postId: string, userId: string, targetType: string) => {
+    try {
+      setFeedData(prevData => prevData.map(post => {
+        if (post.id === postId && post.type === 'post') {
+          return { ...post, isLiked: !post.isLiked } as any;
+        }
+        return post;
+      }));
+      const post = feedData.find(p => p.id === postId);
+
+      if (post?.isLiked) {
+        await unlike({ targetId: postId, targetType });
+      } else {
+        await like({ targetId: postId, targetType });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+
+
+
+  const renderItem = ({ item }: { item: any }) => {
+    if (item.type === 'post') {
+      return <PostItem item={item} onLike={handleLike} openSheet={() => openSheet(item.id)} />;
+    } else if (item.type === 'suggested' && suggestedUsers.length > 0) {
+      return <SuggestedBlock user={suggestedUsers} handleFollow={HandleFollow} />;
+    }
+    return null;
+  };
+  const comments = [
+    {
+      id: '1',
+      user: 'sarah_jones',
+      avatar: 'https://i.pravatar.cc/150?img=1',
+      text: 'This is absolutely stunning! 😍',
+      time: '2h',
+      likes: 24,
+    },
+    {
+      id: '2',
+      user: 'mike.wilson',
+      avatar: 'https://i.pravatar.cc/150?img=3',
+      text: 'Where is this place?? Need to visit ASAP 🏔️',
+      time: '1h',
+      likes: 12,
+    },
+    {
+      id: '3',
+      user: 'jen_captures',
+      avatar: 'https://i.pravatar.cc/150?img=5',
+      text: 'The lighting here is absolutely perfect. What camera did you use?',
+      time: '45m',
+      likes: 8,
+    },
+    {
+      id: '4',
+      user: 'alex.travels',
+      avatar: 'https://i.pravatar.cc/150?img=7',
+      text: 'Fire 🔥🔥🔥 dropping a follow!',
+      time: '30m',
+      likes: 5,
+    },
+    {
+      id: '5',
+      user: 'priya_designs',
+      avatar: 'https://i.pravatar.cc/150?img=9',
+      text: 'Love the composition on this one 🎨',
+      time: '20m',
+      likes: 17,
+    },
+    {
+      id: '6',
+      user: 'tom.adventures',
+      avatar: 'https://i.pravatar.cc/150?img=11',
+      text: 'Been to this exact spot! Brings back memories 🥹',
+      time: '15m',
+      likes: 31,
+    },
+    {
+      id: '7',
+      user: 'nina_foodie',
+      avatar: 'https://i.pravatar.cc/150?img=13',
+      text: 'Your feed is goals honestly 👏',
+      time: '10m',
+      likes: 9,
+    },
+    {
+      id: '8',
+      user: 'raj.clicks',
+      avatar: 'https://i.pravatar.cc/150?img=15',
+      text: 'Incredible shot bro! What editing app? 📸',
+      time: '5m',
+      likes: 3,
+    },
+  ];
+
   if (isLoading) {
     return <ActivityIndicator size="large" color="#0000ff" />
   }
   if (isError) {
     return <Text>Error</Text>
   }
-
-  const handleLike = (postId: string) => {
-    setFeedData(prevData => prevData.map(post => {
-      if (post.id === postId && post.type === 'post') {
-        return { ...post, isLiked: !post.isLiked } as any;
-      }
-      return post;
-    }));
-  };
-
-  const renderItem = ({ item }: { item: any }) => {
-    if (item.type === 'post') {
-      return <PostItem item={item} onLike={handleLike} />;
-    } else if (item.type === 'suggested' && suggestedUsers.length > 0) {
-      return <SuggestedBlock user={suggestedUsers} handleFollow={HandleFollow} />;
-    }
-    return null;
-  };
-
   return (
-    <SafeAreaView style={[styles.container, { paddingBottom: 85 }]} edges={['top', 'left', 'right']}>
-      <Header />
-      <FlatList
-        data={feedData}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        ListHeaderComponent={<StoriesMap />}
-        ListEmptyComponent={<EmptyState user={suggestedUsers} handleFollow={HandleFollow} />}
-        showsVerticalScrollIndicator={false}
-        refreshing={isFetching}
-        onRefresh={onRefresh}
-      />
-    </SafeAreaView>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={[styles.container, { paddingBottom: 85 }]} edges={['top', 'left', 'right']}>
+        <Header />
+        <FlatList
+          data={feedData}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+          ListHeaderComponent={<StoriesMap />}
+          ListEmptyComponent={<EmptyState user={suggestedUsers} handleFollow={HandleFollow} />}
+          showsVerticalScrollIndicator={false}
+          refreshing={isFetching}
+          onRefresh={onRefresh}
+        />
+      </SafeAreaView>
+
+
+
+    </GestureHandlerRootView>
   );
 }
 
@@ -432,7 +584,56 @@ const styles = StyleSheet.create({
 
     backgroundColor: '#ffffff',
   },
-
+  container1: {
+    flexDirection: "row",
+    marginBottom: 16,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  content: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  username: {
+    fontWeight: "bold",
+    fontSize: 14,
+    color: "#000",
+  },
+  time: {
+    fontSize: 12,
+    color: "#888",
+  },
+  text: {
+    fontSize: 14,
+    color: "#333",
+    marginVertical: 4,
+  },
+  actions: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  likeBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  likes: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: "#555",
+  },
+  reply: {
+    fontSize: 12,
+    color: "#888",
+  },
   // Header
   header: {
     flexDirection: 'row',

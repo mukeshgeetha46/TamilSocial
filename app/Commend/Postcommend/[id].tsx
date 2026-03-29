@@ -1,8 +1,10 @@
+import { useAddCommentMutation, useGetCommentsQuery } from '@/redux/api/commentApi';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Stack, router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router/build/hooks';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // Mock Data
 const COMMENTS = [
@@ -57,8 +59,18 @@ const COMMENTS = [
 const EMOJIS = ['❤️', '🙌', '🔥', '👏', '😍', '😮', '😢', '💯'];
 
 export default function CommendModel() {
-    const [inputText, setInputText] = useState('');
+    const { id } = useLocalSearchParams();
 
+    const [inputText, setInputText] = useState('');
+    const [addcommand, { isLoading }] = useAddCommentMutation();
+    const { data: COMMENTS, isLoading: isCommentsLoading } = useGetCommentsQuery({ targetId: id, targetType: 'post' });
+    if (isCommentsLoading) return <ActivityIndicator size="large" color="#0000ff" />
+    console.log(COMMENTS)
+    const handleSubmit = async () => {
+        if (inputText.trim() === '') return;
+        await addcommand({ targetId: id, targetType: 'post', body: inputText });
+        setInputText('');
+    };
     return (
         <View style={styles.modalOverlay}>
             <Stack.Screen options={{ headerShown: false, presentation: 'transparentModal' }} />
@@ -146,7 +158,7 @@ export default function CommendModel() {
                                 <TouchableOpacity style={styles.inputIcon}>
                                     <Feather name="smile" size={20} color="#8E8E93" />
                                 </TouchableOpacity>
-                                <TouchableOpacity style={styles.inputIcon}>
+                                <TouchableOpacity style={styles.inputIcon} onPress={handleSubmit}>
                                     <Ionicons name="send" size={20} color={inputText.length > 0 ? "#2B8BFA" : "#A1C9F7"} />
                                 </TouchableOpacity>
                             </View>

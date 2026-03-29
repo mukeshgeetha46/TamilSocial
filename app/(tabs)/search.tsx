@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useExploreGridQuery } from '../../redux/api/exploreApi';
 
 const { width } = Dimensions.get('window');
 const COLUMN_WIDTH = (width - 4) / 2; // 2px gap between columns
@@ -53,9 +55,15 @@ const EmptySearchState = () => (
 
 export default function SearchScreen() {
     const [activeCategory, setActiveCategory] = useState('For You');
+    const { data: MASONRY_DATA, isLoading, error } = useExploreGridQuery();
+    if (isLoading) {
+        return <View style={styles.container}>
+            <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+    }
 
     const renderMasonryItem = (item: any) => (
-        <View key={item.id} style={[styles.masonryItem, { height: item.height }]}>
+        <TouchableOpacity key={item.id} style={[styles.masonryItem, { height: item.height }]} onPress={() => router.push(`/Post/UserPost/${item.id}`)}>
             <Image
                 source={{ uri: item.url }}
                 style={styles.image}
@@ -78,7 +86,7 @@ export default function SearchScreen() {
                     <Text style={styles.locationText}>{item.location}</Text>
                 </View>
             )}
-        </View>
+        </TouchableOpacity>
     );
 
     return (
@@ -128,14 +136,14 @@ export default function SearchScreen() {
             </View>
 
             {/* Masonry Grid or Empty State */}
-            {MASONRY_DATA.length > 0 ? (
+            {MASONRY_DATA.posts.length > 0 ? (
                 <ScrollView showsVerticalScrollIndicator={false} style={styles.masonryScroll}>
                     <View style={styles.masonryContainer}>
                         <View style={styles.masonryColumn}>
-                            {getMasonryColumns(MASONRY_DATA).leftColumn.map(renderMasonryItem)}
+                            {getMasonryColumns(MASONRY_DATA.posts).leftColumn.map(renderMasonryItem)}
                         </View>
                         <View style={styles.masonryColumn}>
-                            {getMasonryColumns(MASONRY_DATA).rightColumn.map(renderMasonryItem)}
+                            {getMasonryColumns(MASONRY_DATA.posts).rightColumn.map(renderMasonryItem)}
                         </View>
                     </View>
                     <View style={{ height: 20 }} /> {/* Bottom padding */}
