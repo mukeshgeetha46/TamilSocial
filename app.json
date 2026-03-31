@@ -8,6 +8,12 @@
     "scheme": "androidsocialmedia",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    // ✅ Keep this for web fallback only
+    "splash": {
+      "image": "./assets/images/konnect_logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "yes",
@@ -35,11 +41,12 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/konnect_logo.png", // ✅ Fixed: same logo
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
           "dark": {
+            "image": "./assets/images/konnect_logo.png", // ✅ add dark mode image
             "backgroundColor": "#000000"
           }
         }

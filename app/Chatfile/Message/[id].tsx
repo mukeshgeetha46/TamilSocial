@@ -4,7 +4,7 @@ import { Stack, router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Dimensions, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSendMessageMutation } from '../../../redux/api/messageApi';
+import { useGetMessagesQuery, useSendMessageMutation } from '../../../redux/api/messageApi';
 
 const { width } = Dimensions.get('window');
 
@@ -53,9 +53,9 @@ export default function ChatMessage() {
     const [inputText, setInputText] = useState('');
     const [sendMessage] = useSendMessageMutation();
     const { id } = useLocalSearchParams();
+    const { data: MESSAGES, isLoading, error } = useGetMessagesQuery({ conversationId: id });
 
-
-    console.log('message user id', id)
+    console.log('message user id', MESSAGES, error)
 
     const handleSend = async () => {
         try {

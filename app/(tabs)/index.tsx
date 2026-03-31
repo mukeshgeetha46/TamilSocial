@@ -111,7 +111,9 @@ const UserAvatar = ({ image, name, size, style }: { image?: any; name: string; s
 const Header = () => (
 
   <View style={styles.header}>
-    <Text style={styles.headerTitle}>InstaClone</Text>
+    <View style={styles.headerTitle}>
+      <Image source={require('../../assets/images/konnect_logo.png')} style={styles.logo} />
+    </View>
     <View style={styles.headerIcons}>
       <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/Notification/notification')}>
         <Feather name="plus-square" size={24} color="black" />
@@ -128,9 +130,9 @@ const Header = () => (
 
 const StoryItem = ({ item }: { item: any }) => (
   <View style={styles.storyContainer}>
-    <View style={[styles.storyImageRing, item.hasStory && styles.storyImageRingActive]}>
+    <TouchableOpacity onPress={() => router.push(`/Stories/${item.id}`)} style={[styles.storyImageRing, item.hasStory && styles.storyImageRingActive]}>
       <UserAvatar image={item.image} name={item.username} size={60} />
-    </View>
+    </TouchableOpacity>
     {item.isUser && (
       <View style={styles.addStoryIcon}>
         <Feather name="plus" size={14} color="white" />
@@ -583,6 +585,11 @@ const styles = StyleSheet.create({
   container: {
 
     backgroundColor: '#ffffff',
+  },
+  logo: {
+    width: 130,   // was 50
+    height: 40,   // was 50
+    resizeMode: 'contain',
   },
   container1: {
     flexDirection: "row",
